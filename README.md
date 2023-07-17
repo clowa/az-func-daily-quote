@@ -2,7 +2,7 @@
 
 This is my first Azure function. It's supposed to be a simple api that returns a quote from [quotable.io](https://api.quotable.io)
 
-# Deployment
+## Deployment
 
 1. Complie the binary
 
@@ -15,3 +15,5 @@ This is my first Azure function. It's supposed to be a simple api that returns a
    ```pwsh
    func azure functionapp publish azure-func-demo-func
    ```
+
+For super easy deployment, you can use [taskfile](https://taskfile.dev/#/installation) to deploy the function. Than it's a simple `task deploy` ✅

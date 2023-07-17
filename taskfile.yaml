@@ -1,0 +1,12 @@
+version: "3"
+
+tasks:
+  build:
+    cmds:
+      - GOOS="linux" GOARCH="amd64" go build -o ./bin/main ./src/main.go
+    silent: false
+  deploy:
+    deps: [build]
+    cmds:
+      - func azure functionapp publish azure-func-demo-func
+    silent: false
