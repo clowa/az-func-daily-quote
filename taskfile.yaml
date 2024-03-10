@@ -2,11 +2,27 @@ version: "3"
 
 tasks:
   build:
+    dir: function
     cmds:
       - GOOS="linux" GOARCH="amd64" go build -o ./bin/main ./src/main.go
     silent: false
-  deploy:
+
+  deploy-function:
     deps: [build]
+    dir: function
     cmds:
-      - func azure functionapp publish azure-func-demo-func
+      - func azure functionapp publish cwa-quotes-prod-func --custom
     silent: false
+
+  deploy-infra:
+    description: Deploy the current infrastructure code
+    dir: terraform
+    cmds:
+      - terraform init
+      - terraform apply
+
+  deploy-all:
+    description: Deploy the current code and infrastructure
+    tasks:
+      - deploy-infra
+      - deploy-function
