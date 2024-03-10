@@ -1,8 +1,14 @@
+################################################################################
+# Resource Group
+
 resource "azurerm_resource_group" "this" {
   name     = "${local.global_prefix}-rg"
   location = local.region
   tags     = local.tags
 }
+
+################################################################################
+# Key Vault
 
 #trivy:ignore:AVD-AZU-0013
 resource "azurerm_key_vault" "this" {
@@ -28,6 +34,9 @@ resource "azurerm_role_assignment" "developer_key_vault_administrator" {
   role_definition_name = "Key Vault Administrator"
   principal_id         = data.azurerm_client_config.current.object_id
 }
+
+################################################################################
+# Storage Account
 
 resource "azurerm_storage_account" "this" {
   name                = replace("${local.global_prefix}-stac", "-", "")
@@ -61,6 +70,9 @@ resource "azurerm_storage_container" "function_export" {
   container_access_type = "private"
 }
 
+################################################################################
+# Log Analytics / Application Insights
+
 resource "azurerm_log_analytics_workspace" "this" {
   name                = "${local.global_prefix}-log"
   resource_group_name = azurerm_resource_group.this.name
@@ -81,6 +93,8 @@ resource "azurerm_application_insights" "this" {
   sampling_percentage = 0
 }
 
+################################################################################
+# Function App
 
 resource "azurerm_service_plan" "this" {
   name                = "${local.global_prefix}-asp"

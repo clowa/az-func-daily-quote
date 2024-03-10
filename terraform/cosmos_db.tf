@@ -1,7 +1,5 @@
-import {
-  id = "/subscriptions/0a0a4299-b306-4dad-94de-862e8405fdbe/resourceGroups/cwa-quotes-prod-rg/providers/Microsoft.DocumentDB/databaseAccounts/cwa-quotes-prod-cosmos"
-  to = azurerm_cosmosdb_account.this
-}
+################################################################################
+# Cosmos DB
 
 resource "azurerm_cosmosdb_account" "this" {
   name                = "${local.global_prefix}-cosmos"
@@ -47,4 +45,32 @@ resource "azurerm_cosmosdb_sql_container" "quotes" {
   ## Time is normally a "hot partition key" and should be avoided,
   ##since it can lead to many concurrent requests going to the same pyhsical partition.
   partition_key_path = "/timestamp"
+}
+
+################################################################################
+# Database Role
+
+resource "azurerm_cosmosdb_sql_role_definition" "cosmos_db_data_contributor" {
+  role_definition_id  = "cec938ce-34cc-4275-8240-c533197e37c2"
+  account_name        = azurerm_cosmosdb_account.this.name
+  resource_group_name = azurerm_cosmosdb_account.this.resource_group_name
+  name                = "Cosmos DB Data Contributor"
+  assignable_scopes   = ["${azurerm_cosmosdb_account.this.id}/dbs"]
+
+  permissions {
+    ## See: https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-setup-rbac#permission-model
+    data_actions = [
+      "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/create",
+      "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/read",
+      "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/upsert",
+    ]
+  }
+}
+
+resource "azurerm_cosmosdb_sql_role_assignment" "function_cosmos_db_data_contributor" {
+  role_definition_id  = azurerm_cosmosdb_sql_role_definition.cosmos_db_data_contributor.id
+  account_name        = azurerm_cosmosdb_account.this.name
+  resource_group_name = azurerm_cosmosdb_account.this.resource_group_name
+  scope               = "${azurerm_cosmosdb_account.this.id}/dbs/quotes"
+  principal_id        = azurerm_linux_function_app.this.identity[0].principal_id
 }
