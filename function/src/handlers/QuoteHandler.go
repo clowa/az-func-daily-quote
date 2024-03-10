@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -17,6 +18,18 @@ type Quote struct {
 }
 
 func QuoteHandler(w http.ResponseWriter, r *http.Request) {
+	quoteOfTheDay := getQuoteOfTheDay()
+
+	fmt.Printf("Quote of the day: %s by %s", quoteOfTheDay.Content, quoteOfTheDay.Author)
+
+	responseBodyBytes := new(bytes.Buffer)
+	json.NewEncoder(responseBodyBytes).Encode(quoteOfTheDay)
+
+	w.Write(responseBodyBytes.Bytes())
+	w.WriteHeader(http.StatusOK)
+}
+
+func getQuoteOfTheDay() Quote {
 	resp, err := http.Get("https://api.quotable.io/quotes/random?tags=technology,famous-quotes&limit=1")
 	if err != nil {
 		fmt.Printf("Failed to fetch quote. Request failed with error: %s", err)
@@ -28,13 +41,7 @@ func QuoteHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		msg := "Error decoding Quote"
 		log.Printf("%s: %v", msg, err)
-
-		http.Error(w, msg, http.StatusBadRequest)
-		return
 	}
 
-	quoteStr := fmt.Sprintf("%s \n~ %s", quote[0].Content, quote[0].Author)
-
-	w.Write([]byte(quoteStr))
-	w.WriteHeader(http.StatusOK)
+	return quote[0]
 }

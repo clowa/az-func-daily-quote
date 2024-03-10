@@ -3,21 +3,16 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
-	"clowa/azure-function-github-workflow-telegram/src/handlers"
+	"github.com/clowa/az-func-daily-quote/src/handlers"
+	"github.com/clowa/az-func-daily-quote/src/lib/config"
 )
 
-func APIPort() string {
-	port := ":8080"
-	if val, ok := os.LookupEnv("FUNCTIONS_CUSTOMHANDLER_PORT"); ok {
-		port = ":" + val
-	}
-	return port
-}
-
 func main() {
-	listenAddr := APIPort()
+	globalConfig := config.GetConfig()
+	globalConfig.LoadConfig()
+
+	listenAddr := globalConfig.ApiPort
 	http.HandleFunc("/api/quote", handlers.QuoteHandler)
 	log.Printf("About to listen on %s. Go to https://127.0.0.1%s/", listenAddr, listenAddr)
 	log.Fatal(http.ListenAndServe(listenAddr, nil))
