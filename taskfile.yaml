@@ -4,7 +4,19 @@ tasks:
   build:
     dir: function
     cmds:
+      - rm -rf ./bin
       - GOOS="linux" GOARCH="amd64" go build -o ./bin/main ./src/main.go
+    silent: false
+
+  run-locally:
+    dir: function
+    env:
+      COSMOS_HOST: localhost
+      COSMOS_DATABASE: local
+      COSMOS_CONTAINER: local
+    cmds:
+      - GOOS="darwin" GOARCH="arm64" go build -o ./bin/main-arm64 ./src/main.go
+      - ./bin/main-arm64
     silent: false
 
   deploy-function:
