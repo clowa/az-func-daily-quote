@@ -11,6 +11,7 @@ import (
 func main() {
 	globalConfig := config.GetConfig()
 	globalConfig.LoadConfig()
+	globalConfig.PrintConfig()
 
 	listenAddr := globalConfig.ApiPort
 	http.HandleFunc("/api/quote", handlers.QuoteHandler)

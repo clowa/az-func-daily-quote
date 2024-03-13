@@ -3,12 +3,14 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
+
+	quotable "github.com/clowa/az-func-daily-quote/src/lib/quotableSdk"
+	log "github.com/sirupsen/logrus"
 )
 
-type Quote struct {
+// Struct representing the structure returned from the quotable API
+type ApiQuote struct {
 	ID         string   `json:"_id"`
 	Content    string   `json:"content"`
 	Author     string   `json:"author"`
@@ -18,30 +20,18 @@ type Quote struct {
 }
 
 func QuoteHandler(w http.ResponseWriter, r *http.Request) {
-	quoteOfTheDay := getQuoteOfTheDay()
 
-	fmt.Printf("Quote of the day: %s by %s", quoteOfTheDay.Content, quoteOfTheDay.Author)
+	quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology", "famous-quotes"}})
+	if err != nil {
+		handleWarn(w, err)
+	}
+	quoteOfTheDay := quotes[0]
+
+	log.Infof("Quote of the day: %s by %s", quoteOfTheDay.Content, quoteOfTheDay.Author)
 
 	responseBodyBytes := new(bytes.Buffer)
 	json.NewEncoder(responseBodyBytes).Encode(quoteOfTheDay)
 
 	w.Write(responseBodyBytes.Bytes())
 	w.WriteHeader(http.StatusOK)
-}
-
-func getQuoteOfTheDay() Quote {
-	resp, err := http.Get("https://api.quotable.io/quotes/random?tags=technology,famous-quotes&limit=1")
-	if err != nil {
-		fmt.Printf("Failed to fetch quote. Request failed with error: %s", err)
-	}
-	defer resp.Body.Close()
-
-	var quote []Quote
-	err = json.NewDecoder(resp.Body).Decode(&quote)
-	if err != nil {
-		msg := "Error decoding Quote"
-		log.Printf("%s: %v", msg, err)
-	}
-
-	return quote[0]
 }

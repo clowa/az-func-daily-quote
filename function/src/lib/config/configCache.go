@@ -7,8 +7,8 @@ import (
 
 var GlobalConfig Config
 
-func GetConfig() Config {
-	return GlobalConfig
+func GetConfig() *Config {
+	return &GlobalConfig
 }
 
 type Config struct {
