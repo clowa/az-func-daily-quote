@@ -43,8 +43,8 @@ func (qp commaSeparatedQueryString) EncodeValues(key string, v *url.Values) erro
 	return nil
 }
 
-type RandomQuoteResponse struct {
-	ID         string   `json:"_id"`
+type QuoteResponse struct {
+	Id         string   `json:"_id"`
 	Content    string   `json:"content"`
 	Author     string   `json:"author"`
 	AuthorSlug string   `json:"authorSlug"`
@@ -52,32 +52,32 @@ type RandomQuoteResponse struct {
 	Tags       []string `json:"tags"`
 }
 
-func GetRandomQuote(params GetRandomQuoteQueryParams) ([]RandomQuoteResponse, error) {
+func GetRandomQuote(params GetRandomQuoteQueryParams) ([]QuoteResponse, error) {
 
 	urlValues, err := query.Values(params)
 	if err != nil {
-		return []RandomQuoteResponse{}, err
+		return []QuoteResponse{}, err
 	}
 
 	apiEndpoint := quotableApiUrl + getRandomQuotePath + "?" + urlValues.Encode()
 	log.Infof("Fetching quote from %s", apiEndpoint)
 	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
 	if err != nil {
-		return []RandomQuoteResponse{}, fmt.Errorf("failed to create request: %s", err)
+		return []QuoteResponse{}, fmt.Errorf("failed to create request: %s", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return []RandomQuoteResponse{}, fmt.Errorf("failed to make request: %s", err)
+		return []QuoteResponse{}, fmt.Errorf("failed to make request: %s", err)
 	}
 	defer resp.Body.Close()
 
-	var quotes []RandomQuoteResponse
+	var quotes []QuoteResponse
 	err = json.NewDecoder(resp.Body).Decode(&quotes)
 	if err != nil {
-		return []RandomQuoteResponse{}, fmt.Errorf("failed to decode response body: %s", err)
+		return []QuoteResponse{}, fmt.Errorf("failed to decode response body: %s", err)
 	}
 
 	return quotes, nil

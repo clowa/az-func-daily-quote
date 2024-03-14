@@ -12,10 +12,10 @@ func GetConfig() *Config {
 }
 
 type Config struct {
-	CosmosHost      string
-	CosmosDatabase  string
-	CosmosContainer string
-	ApiPort         string
+	CosmosConnectionString string
+	CosmosDatabase         string
+	CosmosContainer        string
+	ApiPort                string
 }
 
 func (c *Config) LoadConfig() {
@@ -24,9 +24,9 @@ func (c *Config) LoadConfig() {
 		c.ApiPort = ":" + val
 	}
 
-	c.CosmosHost = os.Getenv("COSMOS_HOST")
-	if c.CosmosHost == "" {
-		log.Fatal("Environment variable \"COSMOS_HOST\" not set")
+	c.CosmosConnectionString = os.Getenv("COSMOS_CONNECTION_STRING")
+	if c.CosmosConnectionString == "" {
+		log.Fatal("Environment variable \"COSMOS_CONNECTION_STRING\" not set")
 	}
 
 	c.CosmosDatabase = os.Getenv("COSMOS_DATABASE")
@@ -41,7 +41,7 @@ func (c *Config) LoadConfig() {
 }
 
 func (c *Config) PrintConfig() {
-	log.Printf("COSMOS_HOST: %s\n", c.CosmosHost)
+	log.Printf("COSMOS_HOST: %s\n", c.CosmosConnectionString)
 	log.Printf("COSMOS_DATABASE: %s\n", c.CosmosDatabase)
 	log.Printf("COSMOS_CONTAINER: %s\n", c.CosmosContainer)
 }
