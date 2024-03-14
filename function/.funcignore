@@ -8,6 +8,9 @@ test
 
 # App source code
 *.go
+**.go
+go.mod
+go.sum
 
 # macOS Finder files
 *.DS_Store
