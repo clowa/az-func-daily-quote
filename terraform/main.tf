@@ -82,6 +82,25 @@ resource "azurerm_log_analytics_workspace" "this" {
   sku = "PerGB2018"
 }
 
+data "azapi_resource_id" "app_traces_table" {
+  type      = "Microsoft.OperationalInsights/workspaces/tables@2022-10-01"
+  name      = "AppTraces"
+  parent_id = azurerm_log_analytics_workspace.this.id
+}
+
+resource "azapi_resource_action" "app_traces_table_basic" {
+  type        = "Microsoft.OperationalInsights/workspaces/tables@2022-10-01"
+  resource_id = data.azapi_resource_id.app_traces_table.id
+  method      = "PATCH"
+
+  body = jsonencode({
+    properties = {
+      plan                 = "Basic"
+      totalRetentionInDays = 90
+    }
+  })
+}
+
 resource "azurerm_application_insights" "this" {
   name                = "${local.global_prefix}-appi"
   resource_group_name = azurerm_resource_group.this.name

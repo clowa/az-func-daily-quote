@@ -16,9 +16,17 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 3.94"
     }
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 1.12"
+    }
   }
 }
 
+provider "azapi" {
+  tenant_id       = "452df130-4ad1-437a-8c0e-9be535aeb732" # Clowa
+  subscription_id = "0a0a4299-b306-4dad-94de-862e8405fdbe" # teq-free-msdn-sandbox-sub
+}
 
 provider "azurerm" {
   tenant_id       = "452df130-4ad1-437a-8c0e-9be535aeb732" # Clowa
