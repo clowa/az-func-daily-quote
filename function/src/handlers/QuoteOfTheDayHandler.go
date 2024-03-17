@@ -8,17 +8,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 	"github.com/clowa/az-func-daily-quote/src/lib/config"
 	quotable "github.com/clowa/az-func-daily-quote/src/lib/quotableSdk"
 	log "github.com/sirupsen/logrus"
 )
-
-type creationInfo struct {
-	Year  int `json:"year"`
-	Month int `json:"month"`
-	Day   int `json:"day"`
-}
 
 // Struct representing the structure returned from the quotable API
 type Quote struct {
@@ -46,7 +41,12 @@ func (q *Quote) Load(i *quotable.QuoteResponse) {
 func writeQuoteToDatabase(q *Quote) error {
 	config := config.GetConfig()
 
-	client, err := azcosmos.NewClientFromConnectionString(config.CosmosConnectionString, nil)
+	credential, err := azidentity.NewManagedIdentityCredential(nil)
+	if err != nil {
+		return err
+	}
+
+	client, err := azcosmos.NewClient(config.CosmosHost, credential, nil)
 	if err != nil {
 		return err
 	}
@@ -77,8 +77,8 @@ func writeQuoteToDatabase(q *Quote) error {
 	return nil
 }
 
-func QuoteHandler(w http.ResponseWriter, r *http.Request) {
-	quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology", "famous-quotes"}})
+func QuoteOfTheDayHandler(w http.ResponseWriter, r *http.Request) {
+	quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
 	if err != nil {
 		handleWarn(w, err)
 	}

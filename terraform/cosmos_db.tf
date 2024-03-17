@@ -25,12 +25,6 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 }
 
-resource "azurerm_key_vault_secret" "cosmso_primary_sql_connection_string" {
-  key_vault_id = azurerm_key_vault.this.id
-  name         = "cosmos-primary-sql-connection-string"
-  value        = azurerm_cosmosdb_account.this.primary_sql_connection_string
-}
-
 resource "azurerm_key_vault_secret" "cosmos_password" {
   key_vault_id = azurerm_key_vault.this.id
   name         = "cosmos-password"

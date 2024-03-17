@@ -157,9 +157,9 @@ resource "azurerm_linux_function_app" "this" {
     # AzureWebJobsStorage__queueServiceUri = azurerm_storage_account.this.primary_queue_endpoint
     # AzureWebJobsStorage__tableServiceUri = azurerm_storage_account.this.primary_table_endpoint
 
-    COSMOS_CONNECTION_STRING = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault.this.vault_uri}secrets/cosmos-primary-sql-connection-string/)"
-    COSMOS_DATABASE          = azurerm_cosmosdb_sql_database.quotes.name
-    COSMOS_CONTAINER         = azurerm_cosmosdb_sql_container.quotes.name
+    COSMOS_HOST      = azurerm_cosmosdb_account.this.endpoint
+    COSMOS_DATABASE  = azurerm_cosmosdb_sql_database.quotes.name
+    COSMOS_CONTAINER = azurerm_cosmosdb_sql_container.quotes.name
     # COSMOS_USERNAME = ""
     # COSMOS_PASSWORD = "@{Microsoft.KeyVault(SecretUri=${azurerm_key_vault.this.vault_uri}secrets/cosmos-password)}"
   }
