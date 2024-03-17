@@ -63,12 +63,13 @@ func writeQuoteToDatabase(q *Quote) error {
 
 	partitionKey := azcosmos.NewPartitionKeyString(q.AuthorSlug)
 
-	ctx := context.TODO()
 	bytes, err := json.Marshal(q)
 	if err != nil {
 		return err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
 	_, err = container.UpsertItem(ctx, partitionKey, bytes, nil) // ToDo: change to CreateItem()
 	if err != nil {
 		return err
@@ -85,16 +86,19 @@ func QuoteOfTheDayHandler(w http.ResponseWriter, r *http.Request) {
 	quoteOfTheDay := quotes[0]
 
 	log.Infof("Quote of the day: %s by %s", quoteOfTheDay.Content, quoteOfTheDay.Author)
+
+	// Write quote to database
 	databaseQuote := Quote{}
 	databaseQuote.Load(&quoteOfTheDay)
 	err = writeQuoteToDatabase(&databaseQuote)
 	if err != nil {
-		handleWarn(w, err)
+		log.Warnf("Error writing quote to database: %s", err)
 	}
 
+	// Write response
 	responseBodyBytes := new(bytes.Buffer)
 	json.NewEncoder(responseBodyBytes).Encode(quoteOfTheDay)
-
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(responseBodyBytes.Bytes())
 	w.WriteHeader(http.StatusOK)
 }
