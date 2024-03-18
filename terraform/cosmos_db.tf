@@ -2,7 +2,7 @@
 # Cosmos DB
 
 resource "azurerm_cosmosdb_account" "this" {
-  name                = "${local.global_prefix}-cosmos"
+  name                = "${local.global_prefix}-cosno"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
   tags                = local.tags
@@ -32,7 +32,7 @@ resource "azurerm_key_vault_secret" "cosmos_password" {
 }
 
 resource "azurerm_cosmosdb_sql_database" "quotes" {
-  name                = "quotes"
+  name                = "quotes-cosmos" # should end with -cosmos
   resource_group_name = azurerm_resource_group.this.name
   account_name        = azurerm_cosmosdb_account.this.name
 }
@@ -42,9 +42,33 @@ resource "azurerm_cosmosdb_sql_container" "quotes" {
   resource_group_name = azurerm_resource_group.this.name
   account_name        = azurerm_cosmosdb_account.this.name
   database_name       = azurerm_cosmosdb_sql_database.quotes.name
-  ## Time is normally a "hot partition key" and should be avoided,
-  ##since it can lead to many concurrent requests going to the same pyhsical partition.
-  partition_key_path = "/authorSlug"
+  partition_key_path  = "/authorSlug"
+
+  indexing_policy {
+    indexing_mode = "consistent"
+
+    included_path { path = "/*" }
+    included_path { path = "/creationDate/?" }
+    # excluded_path { path = "/_etag" }
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "cosmos_db" {
+  name                           = "${local.global_prefix}-cosmos-db"
+  target_resource_id             = azurerm_cosmosdb_account.this.id
+  log_analytics_workspace_id     = azurerm_log_analytics_workspace.this.id
+  log_analytics_destination_type = "Dedicated"
+
+  dynamic "enabled_log" {
+    for_each = ["ControlPlaneRequests", "DataPlaneRequests", "MongoRequests", "QueryRuntimeStatistics", "PartitionKeyStatistics"]
+    content {
+      category = enabled_log.value
+    }
+  }
+  metric {
+    category = "Requests"
+    enabled  = false
+  }
 }
 
 ################################################################################
@@ -71,6 +95,6 @@ resource "azurerm_cosmosdb_sql_role_assignment" "function_cosmos_db_data_contrib
   role_definition_id  = azurerm_cosmosdb_sql_role_definition.cosmos_db_data_contributor.id
   account_name        = azurerm_cosmosdb_account.this.name
   resource_group_name = azurerm_cosmosdb_account.this.resource_group_name
-  scope               = "${azurerm_cosmosdb_account.this.id}/dbs/quotes"
+  scope               = "${azurerm_cosmosdb_account.this.id}/dbs/${azurerm_cosmosdb_sql_database.quotes.name}"
   principal_id        = azurerm_linux_function_app.this.identity[0].principal_id
 }
