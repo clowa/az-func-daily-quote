@@ -9,6 +9,7 @@ resource "azurerm_cosmosdb_account" "this" {
 
   offer_type = "Standard"
   kind       = "GlobalDocumentDB"
+  # enable_free_tier = true
 
   capabilities {
     name = "EnableServerless"
@@ -22,6 +23,13 @@ resource "azurerm_cosmosdb_account" "this" {
     failover_priority = 0
     location          = "westeurope"
     zone_redundant    = false
+  }
+
+  backup {
+    type                = "Periodic"
+    interval_in_minutes = "60"
+    retention_in_hours  = "720"
+    storage_redundancy  = "Geo"
   }
 }
 
