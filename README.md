@@ -14,9 +14,8 @@ Documentation can be found in the [`docs`](./docs/README.md) folder.
 
 ## Facts
 
-- Average execution time of `quotes`: 1723 ms
 - Average cold start time of `quotes`: ~ 4396 ms
-- Average hot execution time of `quotes`: 291 ms
+- Average hot execution time of `quotes`: ~ 291 ms
 - [Hey](https://github.com/rakyll/hey) stats:
 
   ```bash
