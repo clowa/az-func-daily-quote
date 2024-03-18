@@ -64,6 +64,27 @@ resource "azurerm_storage_account" "this" {
   }
 }
 
+resource "azurerm_storage_management_policy" "function_releases" {
+  storage_account_id = azurerm_storage_account.this.id
+
+  rule {
+    name    = "function-releases"
+    enabled = true
+
+    filters {
+      prefix_match = ["function-releases/"]
+      blob_types   = ["blockBlob"]
+    }
+
+    actions {
+      base_blob {
+        tier_to_cold_after_days_since_creation_greater_than = 7
+        delete_after_days_since_creation_greater_than       = 97
+      }
+    }
+  }
+}
+
 ################################################################################
 # Log Analytics / Application Insights
 
