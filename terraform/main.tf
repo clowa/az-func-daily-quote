@@ -64,12 +64,6 @@ resource "azurerm_storage_account" "this" {
   }
 }
 
-resource "azurerm_storage_container" "function_export" {
-  name                  = "qunis-export" # Has to match with blob trigger of SendExportMail Function
-  storage_account_name  = azurerm_storage_account.this.name
-  container_access_type = "private"
-}
-
 ################################################################################
 # Log Analytics / Application Insights
 
