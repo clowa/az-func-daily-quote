@@ -78,9 +78,12 @@ func writeQuoteToDatabase(q *Quote) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
 
-	_, err = container.UpsertItem(ctx, partitionKey, bytes, nil) // ToDo: change to CreateItem()
+	response, err := container.UpsertItem(ctx, partitionKey, bytes, nil) // ToDo: change to CreateItem()
 	if err != nil {
 		return err
+	}
+	if response.RawResponse.StatusCode != 201 {
+		return fmt.Errorf("write request to database failed with status code %s", response.RawResponse.Status)
 	}
 
 	return nil
