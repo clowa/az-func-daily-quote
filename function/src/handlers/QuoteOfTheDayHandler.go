@@ -39,8 +39,8 @@ func (q *Quote) Load(i *quotable.QuoteResponse) {
 	q.Length = i.Length
 	q.Tags = i.Tags
 
-	now := time.Now()
-	q.CreationDate = fmt.Sprintf("%d-%d-%d", now.Year(), int(now.Month()), now.Day())
+	today := time.Now().Format("2006-01-02")
+	q.CreationDate = today
 }
 
 // Connects to the CosmosDB instance and returns a container client. Configuration in loaded from the environment.
@@ -112,7 +112,10 @@ func getQuoteFromDatabase(creationDate string) (Quote, error) {
 func QuoteOfTheDayHandler(w http.ResponseWriter, r *http.Request) {
 	var quoteOfTheDay Quote
 
-	quoteOfTheDay, err := getQuoteFromDatabase("2024-3-20")
+	today := time.Now().Format("2006-01-02")
+	quoteOfTheDay, err := getQuoteFromDatabase(today)
+	// quoteOfTheDay, err := Quote{}, fmt.Errorf("no quote found")
+
 	if quoteOfTheDay.Length == 0 || err != nil {
 		log.Warnf("Error getting quote from database: %s", err)
 		log.Info("Fetching quote from quotable API")
