@@ -75,67 +75,85 @@ func writeQuoteToDatabase(q *Quote) error {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	response, err := container.UpsertItem(ctx, partitionKey, bytes, nil) // ToDo: change to CreateItem()
 	if err != nil {
 		return err
 	}
-	if response.RawResponse.StatusCode != 201 {
+	if response.RawResponse.StatusCode != 200 && response.RawResponse.StatusCode != 201 {
 		return fmt.Errorf("write request to database failed with status code %s", response.RawResponse.Status)
 	}
 
 	return nil
 }
 
-// func getQuoteFromDatabase(creationDate string) (Quote, error) {
-// 	config := config.GetConfig()
-// 	container := connect()
+func getQuoteFromDatabase(creationDate string) (Quote, error) {
+	container := connect()
 
-// 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
-// 	defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-// 	query := fmt.Sprintf("SELECT * FROM %s q WHERE q.creationDate = \"%s\" OFFSET 0 LIMIT 1", config.CosmosContainer, creationDate)
-// 	partitionKey := azcosmos.NewPartitionKeyString("albert-einstein")
-// 	opt := azcosmos.QueryOptions{
-// 		PageSizeHint: 1,
-// 	}
-// 	pager := container.NewQueryItemsPager(query, partitionKey, &opt)
+	partitionKey := azcosmos.NewPartitionKeyString("albert-einstein")                                // ToDo: Is that the right partition key?
+	const query = "SELECT * FROM quotes q WHERE q.creationDate = \"@creationDate\" OFFSET 0 LIMIT 1" // ToDo: Do not hardcode container
+	opt := azcosmos.QueryOptions{
+		PageSizeHint: 1,
+		QueryParameters: []azcosmos.QueryParameter{
+			{Name: "@creationDate", Value: creationDate},
+		},
+	}
+	pager := container.NewQueryItemsPager(query, partitionKey, &opt)
 
-// 	var quotes []Quote
-// 	for pager.More() {
-// 		queryResponse, err := pager.NextPage(ctx)
-// 		if err != nil {
-// 			log.Warnf("Error querying database: %s", err)
-// 		}
+	var quotes []Quote
+	for pager.More() {
+		queryResponse, err := pager.NextPage(ctx)
+		if err != nil {
+			return Quote{}, err
+		}
 
-// 		for _, item := range queryResponse.Items {
-// 			json.Unmarshal(item, &quotes)
-// 		}
-// 	}
-// 	quote := quotes[0]
-// 	log.Printf("Query response: %v", quote)
+		log.Infof("Got %d items from database", len(queryResponse.Items))
 
-// 	return quote, nil
-// }
+		for _, item := range queryResponse.Items {
+			quote := Quote{}
+			if err = json.Unmarshal(item, &quote); err != nil {
+				return Quote{}, err
+			}
+			quotes = append(quotes, quote)
+		}
+	}
+
+	if len(quotes) == 0 {
+		return Quote{}, fmt.Errorf("no quotes found for creation date %s", creationDate)
+	}
+	quote := quotes[0]
+	log.Printf("Query response: %v", quote)
+
+	return quote, nil
+}
 
 func QuoteOfTheDayHandler(w http.ResponseWriter, r *http.Request) {
-	quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
-	if err != nil {
-		handleWarn(w, err)
+	var quoteOfTheDay Quote
+
+	quoteOfTheDay, err := getQuoteFromDatabase("2024-3-17")
+	if quoteOfTheDay.Length == 0 || err != nil {
+		log.Warnf("Error getting quote from database: %s", err)
+		log.Info("Fetching quote from quotable API")
+		quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
+		if err != nil {
+			handleWarn(w, err)
+		}
+		quote := quotes[0]
+
+		// Write quote to database
+		quoteOfTheDay.Load(&quote)
+		err = writeQuoteToDatabase(&quoteOfTheDay)
+		if err != nil {
+			log.Warnf("Error writing quote to database: %s", err)
+		}
 	}
-	quoteOfTheDay := quotes[0]
 
 	log.Infof("Quote of the day: %s by %s", quoteOfTheDay.Content, quoteOfTheDay.Author)
-
-	// Write quote to database
-	databaseQuote := Quote{}
-	databaseQuote.Load(&quoteOfTheDay)
-	err = writeQuoteToDatabase(&databaseQuote)
-	if err != nil {
-		log.Warnf("Error writing quote to database: %s", err)
-	}
 
 	// Write response
 	responseBodyBytes := new(bytes.Buffer)
