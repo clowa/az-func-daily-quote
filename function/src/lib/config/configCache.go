@@ -12,10 +12,10 @@ func GetConfig() *Config {
 }
 
 type Config struct {
-	CosmosHost      string
-	CosmosDatabase  string
-	CosmosContainer string
-	ApiPort         string
+	MongodbConnectionString string
+	MongodbDatabase         string
+	MongodbCollection       string
+	ApiPort                 string
 }
 
 func (c *Config) LoadConfig() {
@@ -24,24 +24,24 @@ func (c *Config) LoadConfig() {
 		c.ApiPort = ":" + val
 	}
 
-	c.CosmosHost = os.Getenv("COSMOS_HOST")
-	if c.CosmosHost == "" {
-		log.Fatal("Environment variable \"COSMOS_HOST\" not set")
+	c.MongodbConnectionString = os.Getenv("MONGODB_CONNECTION_STRING")
+	if c.MongodbConnectionString == "" {
+		log.Fatal("Environment variable \"MONGODB_CONNECTION_STRING\" not set")
 	}
 
-	c.CosmosDatabase = os.Getenv("COSMOS_DATABASE")
-	if c.CosmosDatabase == "" {
-		log.Fatal("Environment variable \"COSMOS_DATABASE\" not set")
+	c.MongodbDatabase = os.Getenv("MONGODB_DATABASE")
+	if c.MongodbDatabase == "" {
+		log.Fatal("Environment variable \"MONGODB_DATABASE\" not set")
 	}
 
-	c.CosmosContainer = os.Getenv("COSMOS_CONTAINER")
-	if c.CosmosContainer == "" {
-		log.Fatal("Environment variable \"COSMOS_CONTAINER\" not set")
+	c.MongodbCollection = os.Getenv("MONGODB_COLLECTION")
+	if c.MongodbCollection == "" {
+		log.Fatal("Environment variable \"MONGODB_COLLECTION\" not set")
 	}
 }
 
 func (c *Config) PrintConfig() {
-	log.Printf("COSMOS_HOST: %s\n", c.CosmosHost)
-	log.Printf("COSMOS_DATABASE: %s\n", c.CosmosDatabase)
-	log.Printf("COSMOS_CONTAINER: %s\n", c.CosmosContainer)
+	log.Printf("MONGODB_CONNECTION_STRING: %s\n", c.MongodbConnectionString)
+	log.Printf("MONGODB_DATABASE: %s\n", c.MongodbDatabase)
+	log.Printf("MONGODB_COLLECTION: %s\n", c.MongodbCollection)
 }

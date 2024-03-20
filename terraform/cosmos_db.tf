@@ -2,14 +2,22 @@
 # Cosmos DB
 
 resource "azurerm_cosmosdb_account" "this" {
-  name                = "${local.global_prefix}-cosno"
+  name                = "${local.global_prefix}-cosmon"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
   tags                = local.tags
 
   offer_type = "Standard"
-  kind       = "GlobalDocumentDB"
+  kind       = "MongoDB"
   # enable_free_tier = true
+
+  capabilities {
+    name = "EnableMongo"
+  }
+
+  capabilities {
+    name = "EnableMongoRoleBasedAccessControl"
+  }
 
   capabilities {
     name = "EnableServerless"
@@ -25,6 +33,17 @@ resource "azurerm_cosmosdb_account" "this" {
     zone_redundant    = false
   }
 
+  # ip_range_filter = "0.0.0.0"
+  # ip_range_filter = "104.42.195.92,40.76.54.131,52.176.6.30,52.169.50.45,52.187.184.26,0.0.0.0"
+
+  cors_rule {
+    allowed_headers    = []
+    allowed_methods    = []
+    allowed_origins    = ["https://${local.custom_hostname}"]
+    exposed_headers    = []
+    max_age_in_seconds = 60
+  }
+
   backup {
     type                = "Periodic"
     interval_in_minutes = "60"
@@ -33,31 +52,39 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 }
 
-resource "azurerm_key_vault_secret" "cosmos_password" {
+resource "azurerm_key_vault_secret" "mongodb_primary_connection_string" {
   key_vault_id = azurerm_key_vault.this.id
-  name         = "cosmos-password"
-  value        = azurerm_cosmosdb_account.this.primary_key
+  name         = "primary-mongodb-connection-string"
+  value        = azurerm_cosmosdb_account.this.primary_mongodb_connection_string
 }
 
-resource "azurerm_cosmosdb_sql_database" "quotes" {
-  name                = "quotes-cosmos" # should end with -cosmos
-  resource_group_name = azurerm_resource_group.this.name
-  account_name        = azurerm_cosmosdb_account.this.name
-}
-
-resource "azurerm_cosmosdb_sql_container" "quotes" {
+resource "azurerm_cosmosdb_mongo_database" "quotes" {
   name                = "quotes"
   resource_group_name = azurerm_resource_group.this.name
   account_name        = azurerm_cosmosdb_account.this.name
-  database_name       = azurerm_cosmosdb_sql_database.quotes.name
-  partition_key_path  = "/authorSlug"
+}
 
-  indexing_policy {
-    indexing_mode = "consistent"
+resource "azurerm_cosmosdb_mongo_collection" "quotes" {
+  name                = "quotes"
+  resource_group_name = azurerm_resource_group.this.name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_mongo_database.quotes.name
+  default_ttl_seconds = 777
+  shard_key           = "id"
 
-    included_path { path = "/*" }
-    included_path { path = "/creationDate/?" }
-    # excluded_path { path = "/_etag" }
+  index {
+    keys   = ["_id"]
+    unique = true # Has to be unset during creation
+  }
+
+  index {
+    keys   = ["id"]
+    unique = true
+  }
+
+  index {
+    keys   = ["author", "content", "creationDate", "tags"]
+    unique = false
   }
 }
 
@@ -68,7 +95,7 @@ resource "azurerm_monitor_diagnostic_setting" "cosmos_db" {
   log_analytics_destination_type = "Dedicated"
 
   dynamic "enabled_log" {
-    for_each = ["ControlPlaneRequests", "DataPlaneRequests", "MongoRequests", "QueryRuntimeStatistics", "PartitionKeyStatistics"]
+    for_each = ["ControlPlaneRequests", "DataPlaneRequests", "MongoRequests", "QueryRuntimeStatistics", "PartitionKeyStatistics", "PartitionKeyRUConsumption"]
     content {
       category = enabled_log.value
     }
@@ -81,28 +108,3 @@ resource "azurerm_monitor_diagnostic_setting" "cosmos_db" {
 
 ################################################################################
 # Database Role
-
-resource "azurerm_cosmosdb_sql_role_definition" "cosmos_db_data_contributor" {
-  role_definition_id  = "cec938ce-34cc-4275-8240-c533197e37c2"
-  account_name        = azurerm_cosmosdb_account.this.name
-  resource_group_name = azurerm_cosmosdb_account.this.resource_group_name
-  name                = "Cosmos DB Data Contributor"
-  assignable_scopes   = ["${azurerm_cosmosdb_account.this.id}/dbs"]
-
-  permissions {
-    ## See: https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-setup-rbac#permission-model
-    data_actions = [
-      "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/create",
-      "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/read",
-      "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/upsert",
-    ]
-  }
-}
-
-resource "azurerm_cosmosdb_sql_role_assignment" "function_cosmos_db_data_contributor" {
-  role_definition_id  = azurerm_cosmosdb_sql_role_definition.cosmos_db_data_contributor.id
-  account_name        = azurerm_cosmosdb_account.this.name
-  resource_group_name = azurerm_cosmosdb_account.this.resource_group_name
-  scope               = "${azurerm_cosmosdb_account.this.id}/dbs/${azurerm_cosmosdb_sql_database.quotes.name}"
-  principal_id        = azurerm_linux_function_app.this.identity[0].principal_id
-}

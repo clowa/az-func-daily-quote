@@ -23,3 +23,12 @@ For super easy deployment, you can use [taskfile](https://taskfile.dev/#/install
 - [ ] Implement Azure CLI as well as Managed Identity authentication to allow running in an non Azure environment.
 - [ ] Implement Cross Origin Resource Sharing (CORS) on database communication.
 - [ ] Implement Cross Origin Resource Sharing (CORS) to allow the function to just be called from the frontend.
+
+## Configuration
+
+| Name                           | Required | Description                               | Example                                                                                                  |
+| ------------------------------ | -------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `FUNCTIONS_CUSTOMHANDLER_PORT` | No       | Port number of the API to listen on       | `8080`                                                                                                   |
+| `MONGODB_CONNECTION_STRING`    | Yes      | MongoDB connection string of the database | `mongodb://myDatabaseUser:D1fficultP%40ssw0rd@cluster0.example.mongodb.net/?retryWrites=true&w=majority` |
+| `MONGODB_DATABASE`             | Yes      | MongoDB database name                     | `myDatabase`                                                                                             |
+| `MONGODB_COLLECTION`           | Yes      | MongoDB collection name                   | `myCollection`                                                                                           |
