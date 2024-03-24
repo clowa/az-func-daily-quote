@@ -8,11 +8,16 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 	"github.com/clowa/az-func-daily-quote/src/lib/config"
 	quotable "github.com/clowa/az-func-daily-quote/src/lib/quotableSdk"
 	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+const (
+	defaultContextTimeout = 10 * time.Second
 )
 
 // Struct representing the structure returned from the quotable API
@@ -23,7 +28,7 @@ type Quote struct {
 	AuthorSlug   string   `json:"authorSlug"`
 	Length       int      `json:"length"`
 	Tags         []string `json:"tags"`
-	CreationDate string   `json:"creationDate"`
+	CreationDate string   `json:"creationdate"`
 }
 
 func (q *Quote) Load(i *quotable.QuoteResponse) {
@@ -34,105 +39,101 @@ func (q *Quote) Load(i *quotable.QuoteResponse) {
 	q.Length = i.Length
 	q.Tags = i.Tags
 
-	now := time.Now()
-	q.CreationDate = fmt.Sprintf("%d-%d-%d", now.Year(), int(now.Month()), now.Day())
+	today := time.Now().Format("2006-01-02")
+	q.CreationDate = today
 }
 
 // Connects to the CosmosDB instance and returns a container client. Configuration in loaded from the environment.
-func connect() *azcosmos.ContainerClient {
+func connect() *mongo.Client {
 	config := config.GetConfig()
 
-	credential, err := azidentity.NewManagedIdentityCredential(nil)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultContextTimeout)
+	defer cancel()
+
+	clientOptions := options.Client().ApplyURI(config.MongodbConnectionString)
+	c, err := mongo.Connect(ctx, clientOptions)
+
 	if err != nil {
-		log.Warnf("Error creating managed identity credential: %s", err)
+		log.Warnf("unable to initialize connection %v", err)
 	}
 
-	client, err := azcosmos.NewClient(config.CosmosHost, credential, nil)
+	err = c.Ping(ctx, nil)
 	if err != nil {
-		log.Warnf("Error creating Cosmos client: %s", err)
+		log.Warnf("unable to connect %v", err)
 	}
 
-	database, err := client.NewDatabase(config.CosmosDatabase)
-	if err != nil {
-		log.Warnf("Error creating Cosmos database: %s", err)
-	}
-
-	container, err := database.NewContainer(config.CosmosContainer)
-	if err != nil {
-		log.Warnf("Error creating Cosmos container: %s", err)
-	}
-
-	return container
+	return c
 }
 
 func writeQuoteToDatabase(q *Quote) error {
-	container := connect()
+	config := config.GetConfig()
+	client := connect()
+	ctx := context.Background()
+	defer client.Disconnect(ctx)
 
-	partitionKey := azcosmos.NewPartitionKeyString(q.AuthorSlug)
-
-	bytes, err := json.Marshal(q)
+	collection := client.Database(config.MongodbDatabase).Collection(config.MongodbCollection)
+	r, err := collection.InsertOne(ctx, &q)
 	if err != nil {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
-	defer cancel()
-
-	_, err = container.UpsertItem(ctx, partitionKey, bytes, nil) // ToDo: change to CreateItem()
-	if err != nil {
-		return err
-	}
+	log.Infof("Inserted quote with ID %s", r.InsertedID)
 
 	return nil
 }
 
-// func getQuoteFromDatabase(creationDate string) (Quote, error) {
-// 	config := config.GetConfig()
-// 	container := connect()
+func getQuoteFromDatabase(creationDate string) (Quote, error) {
+	config := config.GetConfig()
+	client := connect()
+	ctx := context.Background()
+	defer client.Disconnect(ctx)
 
-// 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
-// 	defer cancel()
+	collection := client.Database(config.MongodbDatabase).Collection(config.MongodbCollection)
+	filter := bson.D{{"creationdate", creationDate}}
+	results, err := collection.Find(ctx, filter)
+	if err != nil {
+		return Quote{}, err
+	}
 
-// 	query := fmt.Sprintf("SELECT * FROM %s q WHERE q.creationDate = \"%s\" OFFSET 0 LIMIT 1", config.CosmosContainer, creationDate)
-// 	partitionKey := azcosmos.NewPartitionKeyString("albert-einstein")
-// 	opt := azcosmos.QueryOptions{
-// 		PageSizeHint: 1,
-// 	}
-// 	pager := container.NewQueryItemsPager(query, partitionKey, &opt)
+	var quotes []Quote
+	if err = results.All(ctx, &quotes); err != nil {
+		return Quote{}, err
+	}
 
-// 	var quotes []Quote
-// 	for pager.More() {
-// 		queryResponse, err := pager.NextPage(ctx)
-// 		if err != nil {
-// 			log.Warnf("Error querying database: %s", err)
-// 		}
+	if len(quotes) == 0 {
+		return Quote{}, fmt.Errorf("no quotes found for creation date %s", creationDate)
+	}
 
-// 		for _, item := range queryResponse.Items {
-// 			json.Unmarshal(item, &quotes)
-// 		}
-// 	}
-// 	quote := quotes[0]
-// 	log.Printf("Query response: %v", quote)
+	quote := quotes[0]
 
-// 	return quote, nil
-// }
+	return quote, nil
+}
 
 func QuoteOfTheDayHandler(w http.ResponseWriter, r *http.Request) {
-	quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
-	if err != nil {
-		handleWarn(w, err)
+	var quoteOfTheDay Quote
+
+	today := time.Now().Format("2006-01-02")
+	quoteOfTheDay, err := getQuoteFromDatabase(today)
+	// quoteOfTheDay, err := Quote{}, fmt.Errorf("no quote found")
+
+	if quoteOfTheDay.Length == 0 || err != nil {
+		log.Warnf("Error getting quote from database: %s", err)
+		log.Info("Fetching quote from quotable API")
+		quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
+		if err != nil {
+			handleWarn(w, err)
+		}
+		quote := quotes[0]
+
+		// Write quote to database
+		quoteOfTheDay.Load(&quote)
+		err = writeQuoteToDatabase(&quoteOfTheDay)
+		if err != nil {
+			log.Warnf("Error writing quote to database: %s", err)
+		}
 	}
-	quoteOfTheDay := quotes[0]
 
 	log.Infof("Quote of the day: %s by %s", quoteOfTheDay.Content, quoteOfTheDay.Author)
-
-	// Write quote to database
-	databaseQuote := Quote{}
-	databaseQuote.Load(&quoteOfTheDay)
-	err = writeQuoteToDatabase(&databaseQuote)
-	if err != nil {
-		log.Warnf("Error writing quote to database: %s", err)
-	}
 
 	// Write response
 	responseBodyBytes := new(bytes.Buffer)

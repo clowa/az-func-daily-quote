@@ -1,0 +1,60 @@
+name: quotes
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker Compose reference guide at
+# https://docs.docker.com/go/compose-spec-reference/
+
+# Here the instructions define your application as a service called "server".
+# This service is built from the Dockerfile in the current directory.
+# You can add other services your application may depend on here, such as a
+# database or a cache. For examples, see the Awesome Compose repository:
+# https://github.com/docker/awesome-compose
+services:
+  server:
+    depends_on:
+      - db
+    build:
+      context: .
+      target: final
+    environment:
+      - MONGODB_CONNECTION_STRING=mongodb://mongo:SuperSecurePassword@db:27017
+      - MONGODB_DATABASE=quotes
+      - MONGODB_COLLECTION=quotes
+    ports:
+      - 8080:8080
+
+  # The commented out section below is an example of how to define a PostgreSQL
+  # database that your application can use. `depends_on` tells Docker Compose to
+  # start the database before your application. The `db-data` volume persists the
+  # database data between container restarts. The `db-password` secret is used
+  # to set the database password. You must create `db/password.txt` and add
+  # a password of your choosing to it before running `docker compose up`.
+  #     depends_on:
+  #       db:
+  #         condition: service_healthy
+  db:
+    image: mongo:7-jammy
+    restart: always
+    user: mongodb
+    # secrets:
+    #   - db-password
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=SuperSecurePassword
+      # - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/db-password
+      - MONGO_INITDB_DATABASE=quotes
+    expose:
+      - 27017
+    ports:
+      - 27017:27017
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+volumes:
+  db-data:
+# secrets:
+#   db-password:
+#     file: db/password.txt

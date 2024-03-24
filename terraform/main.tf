@@ -1,3 +1,7 @@
+locals {
+  custom_hostname = "quotes.clowa.dev"
+}
+
 ################################################################################
 # Resource Group
 
@@ -172,11 +176,9 @@ resource "azurerm_linux_function_app" "this" {
     # AzureWebJobsStorage__queueServiceUri = azurerm_storage_account.this.primary_queue_endpoint
     # AzureWebJobsStorage__tableServiceUri = azurerm_storage_account.this.primary_table_endpoint
 
-    COSMOS_HOST      = azurerm_cosmosdb_account.this.endpoint
-    COSMOS_DATABASE  = azurerm_cosmosdb_sql_database.quotes.name
-    COSMOS_CONTAINER = azurerm_cosmosdb_sql_container.quotes.name
-    # COSMOS_USERNAME = ""
-    # COSMOS_PASSWORD = "@{Microsoft.KeyVault(SecretUri=${azurerm_key_vault.this.vault_uri}secrets/cosmos-password)}"
+    MONGODB_CONNECTION_STRING = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.mongodb_primary_connection_string.versionless_id}/)"
+    MONGODB_DATABASE          = azurerm_cosmosdb_mongo_database.quotes.name
+    MONGODB_COLLECTION        = azurerm_cosmosdb_mongo_collection.quotes.name
   }
 
   site_config {
@@ -259,7 +261,7 @@ resource "azurerm_role_assignment" "developer_storage_account_contributor" {
 resource "azurerm_app_service_custom_hostname_binding" "quotes_clowa_dev" {
   app_service_name    = azurerm_linux_function_app.this.name
   resource_group_name = azurerm_linux_function_app.this.resource_group_name
-  hostname            = "quotes.clowa.dev"
+  hostname            = local.custom_hostname
 }
 
 resource "azurerm_app_service_managed_certificate" "quotes_clowa_dev" {
