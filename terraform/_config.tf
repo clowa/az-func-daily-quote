@@ -52,6 +52,7 @@ locals {
   global_prefix = "${local.company}-${local.solution}-${local.environment}"
 
   tags = {
+    datadog-metrics  = true
     solution         = local.solution
     application      = local.solution
     deploymentMethod = "terraform"
