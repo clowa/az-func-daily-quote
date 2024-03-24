@@ -16,7 +16,7 @@ services:
       context: .
       target: final
     environment:
-      - MONGODB_CONNECTION_STRING=mongodb://mongo:Sup3rS3cur3Passw0rd@db:27017
+      - MONGODB_CONNECTION_STRING=mongodb://mongo:SuperSecurePassword@db:27017
       - MONGODB_DATABASE=quotes
       - MONGODB_COLLECTION=quotes
     ports:
@@ -41,7 +41,7 @@ services:
       - db-data:/var/lib/postgresql/data
     environment:
       - MONGO_INITDB_ROOT_USERNAME=mongo
-      - MONGO_INITDB_ROOT_PASSWORD=Sup3rS3cur3Passw0rd
+      - MONGO_INITDB_ROOT_PASSWORD=SuperSecurePassword
       # - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/db-password
       - MONGO_INITDB_DATABASE=quotes
     expose:
