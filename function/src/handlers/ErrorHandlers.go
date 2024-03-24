@@ -13,7 +13,7 @@ func handleWarn(w http.ResponseWriter, err error) {
 }
 
 func handleFatal(w http.ResponseWriter, err error) {
-	log.Fatal("Server failed with error: %s", err)
+	log.Fatalf("Server failed with error: %s", err)
 	w.WriteHeader(http.StatusInternalServerError)
 	os.Exit(1)
 }
