@@ -160,7 +160,6 @@ resource "azurerm_linux_function_app" "this" {
   # storage_uses_managed_identity = true
   https_only = true
 
-
   identity {
     type = "SystemAssigned"
   }
@@ -195,7 +194,23 @@ resource "azurerm_linux_function_app" "this" {
     cors {
       allowed_origins = ["https://portal.azure.com"]
     }
+
+    ## Access Restrictions aren't needed if endpoints require token authentication
+    # ip_restriction_default_action = "Deny"
+    # ip_restriction {
+    #   action     = "Allow"
+    #   priority   = 400
+    #   name       = "AllowFrontendDomain"
+    #   ip_address = "0.0.0.0/0"
+    #   headers = [{
+    #     x_azure_fdid      = []
+    #     x_fd_health_probe = []
+    #     x_forwarded_for   = []
+    #     x_forwarded_host  = ["api.clowa.dev"]
+    #   }]
+    # }
   }
+
   sticky_settings {
     app_setting_names = [
       "APPINSIGHTS_INSTRUMENTATIONKEY",
@@ -257,6 +272,9 @@ resource "azurerm_role_assignment" "developer_storage_account_contributor" {
 #     }
 #   }
 # }
+
+################################################################################
+# Custom Domain
 
 resource "azurerm_app_service_custom_hostname_binding" "quotes_clowa_dev" {
   app_service_name    = azurerm_linux_function_app.this.name

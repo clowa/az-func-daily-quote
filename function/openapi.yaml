@@ -1,0 +1,42 @@
+openapi: "3.1.0"
+info:
+  title: Quotes API
+  version: "1.0"
+servers:
+  - url: https://quotes.clowa.dev
+    description: Production server
+paths:
+  /api/quote:
+    get:
+      summary: Get a quote
+      operationId: get-quote
+      responses:
+        "200":
+          description: A quote object
+        "500":
+          description: The server failed to retrieve a quote.
+    post:
+      summary: Write a quote to the database
+      operationId: post-quote
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: The server failed to parse the request body.
+        "415":
+          description: Request header "Content-Type" is not set to "application/json".
+        "500":
+          description: The server failed to write the quote to the database.
+# components:
+#   securitySchemes:
+#     apiKeyHeader:
+#       type: apiKey
+#       name: Ocp-Apim-Subscription-Key
+#       in: header
+#     apiKeyQuery:
+#       type: apiKey
+#       name: subscription-key
+#       in: query
+# security:
+#   - apiKeyHeader: []
+#   - apiKeyQuery: []

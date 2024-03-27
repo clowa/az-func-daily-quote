@@ -34,15 +34,15 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 
   # ip_range_filter = "0.0.0.0"
-  # ip_range_filter = "104.42.195.92,40.76.54.131,52.176.6.30,52.169.50.45,52.187.184.26,0.0.0.0"
+  # ip_range_filter = "104.42.195.92,40.76.54.131,52.176.6.30,52.169.50.45,52.187.184.26,0.0.0.0" # Allow Azure Services via Portal
 
-  cors_rule {
-    allowed_headers    = []
-    allowed_methods    = []
-    allowed_origins    = ["https://${local.custom_hostname}"]
-    exposed_headers    = []
-    max_age_in_seconds = 60
-  }
+  # cors_rule {
+  #   allowed_headers    = []
+  #   allowed_methods    = []
+  #   allowed_origins    = ["https://${local.custom_hostname}"]
+  #   exposed_headers    = []
+  #   max_age_in_seconds = 60
+  # }
 
   backup {
     type                = "Periodic"
