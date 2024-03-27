@@ -10,6 +10,7 @@ import (
 
 	"github.com/clowa/az-func-daily-quote/src/lib/config"
 	quotable "github.com/clowa/az-func-daily-quote/src/lib/quotableSdk"
+	quote "github.com/clowa/az-func-daily-quote/src/lib/quote"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -42,7 +43,7 @@ func connect() *mongo.Client {
 	return c
 }
 
-func writeQuoteToDatabase(q *Quote) error {
+func writeQuoteToDatabase(q *quote.Quote) error {
 	config := config.GetConfig()
 	client := connect()
 	ctx := context.Background()
@@ -59,7 +60,7 @@ func writeQuoteToDatabase(q *Quote) error {
 	return nil
 }
 
-func getQuoteFromDatabase(creationDate string) (Quote, error) {
+func getQuoteFromDatabase(creationDate string) (quote.Quote, error) {
 	config := config.GetConfig()
 	client := connect()
 	ctx := context.Background()
@@ -69,16 +70,16 @@ func getQuoteFromDatabase(creationDate string) (Quote, error) {
 	filter := bson.D{{Key: "creationdate", Value: creationDate}}
 	results, err := collection.Find(ctx, filter)
 	if err != nil {
-		return Quote{}, err
+		return quote.Quote{}, err
 	}
 
-	var quotes []Quote
+	var quotes []quote.Quote
 	if err = results.All(ctx, &quotes); err != nil {
-		return Quote{}, err
+		return quote.Quote{}, err
 	}
 
 	if len(quotes) == 0 {
-		return Quote{}, fmt.Errorf("no quotes found for creation date %s", creationDate)
+		return quote.Quote{}, fmt.Errorf("no quotes found for creation date %s", creationDate)
 	}
 
 	quote := quotes[0]
@@ -87,7 +88,7 @@ func getQuoteFromDatabase(creationDate string) (Quote, error) {
 }
 
 func getQuoteHandler(w http.ResponseWriter, r *http.Request) {
-	var quoteOfTheDay Quote
+	var quoteOfTheDay quote.Quote
 
 	today := time.Now().Format("2006-01-02")
 	quoteOfTheDay, err := getQuoteFromDatabase(today)
@@ -98,12 +99,14 @@ func getQuoteHandler(w http.ResponseWriter, r *http.Request) {
 		log.Info("Fetching quote from quotable API")
 		quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
 		if err != nil {
-			handleWarn(w, err)
+			log.Warnf("Error fetching quote from quotable API: %s", err)
+			http.Error(w, "Failed to fetch new quote", http.StatusInternalServerError)
+			return
 		}
 		quote := quotes[0]
 
 		// Write quote to database
-		quoteOfTheDay.Load(&quote)
+		quoteOfTheDay.LoadFromQuotable(&quote)
 		err = writeQuoteToDatabase(&quoteOfTheDay)
 		if err != nil {
 			log.Warnf("Error writing quote to database: %s", err)

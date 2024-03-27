@@ -8,6 +8,11 @@ tasks:
       - GOOS="linux" GOARCH="amd64" go build -o ./bin/main ./src/main.go
     silent: false
 
+  test:
+    dir: function
+    cmds:
+      - go test ./...
+
   run-locally:
     dir: function
     cmds:
