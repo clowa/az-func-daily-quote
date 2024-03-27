@@ -105,6 +105,3 @@ resource "azurerm_monitor_diagnostic_setting" "cosmos_db" {
     enabled  = false
   }
 }
-
-################################################################################
-# Database Role
