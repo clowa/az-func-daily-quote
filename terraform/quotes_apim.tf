@@ -40,17 +40,43 @@ resource "azurerm_api_management_backend" "quotes" {
 }
 
 ################################################################################
-# Products
+# Product: Quotes Silver
 
-resource "azurerm_api_management_product" "quotes" {
-  product_id            = "quotes"
+moved {
+  from = azurerm_api_management_product.quotes
+  to   = azurerm_api_management_product.quotes_silver
+}
+
+resource "azurerm_api_management_product" "quotes_silver" {
+  product_id            = "quotes-silver"
   resource_group_name   = azurerm_api_management.apim.resource_group_name
   api_management_name   = azurerm_api_management.apim.name
-  display_name          = "Quotes"
+  display_name          = "Quotes Silver"
   subscription_required = true
   subscriptions_limit   = 1
   approval_required     = true
   published             = true
+}
+
+resource "azurerm_api_management_product_policy" "quotes_silver" {
+  product_id          = azurerm_api_management_product.quotes_silver.product_id
+  api_management_name = azurerm_api_management_product.quotes_silver.api_management_name
+  resource_group_name = azurerm_api_management_product.quotes_silver.resource_group_name
+  xml_content         = <<XML
+<policies>
+    <inbound>
+        <base />
+        <rate-limit calls="120" renewal-period="60" remaining-calls-header-name="x-ratelimit-remaining" retry-after-header-name="x-ratelimit-retry-after">
+          <api id="${azurerm_api_management_api.quotes.name}" name="${azurerm_api_management_api.quotes.display_name}">
+            <operation id="post-quote" calls="1" renewal-period="300" name="Write a quote to the database" />
+          </api>
+        </rate-limit>
+    </inbound>
+    <outbound>
+        <base />
+    </outbound>
+</policies>
+XML
 }
 
 ################################################################################
@@ -70,11 +96,16 @@ resource "azurerm_api_management_api" "quotes" {
   }
 }
 
-resource "azurerm_api_management_product_api" "quotes_quotes" {
+moved {
+  from = azurerm_api_management_product_api.quotes_quotes
+  to   = azurerm_api_management_product_api.quotes_quotes_silver
+}
+
+resource "azurerm_api_management_product_api" "quotes_quotes_silver" {
   resource_group_name = azurerm_api_management.apim.resource_group_name
   api_management_name = azurerm_api_management.apim.name
   api_name            = azurerm_api_management_api.quotes.name
-  product_id          = azurerm_api_management_product.quotes.product_id
+  product_id          = azurerm_api_management_product.quotes_silver.product_id
 }
 
 resource "azurerm_api_management_api_diagnostic" "quotes" {
