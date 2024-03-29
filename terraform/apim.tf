@@ -5,10 +5,11 @@ resource "azurerm_api_management" "apim" {
   name                = "${local.global_prefix}-apim"
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
-  publisher_name      = "Clowa"
-  publisher_email     = "example@clowa.de"
+  tags                = local.tags
 
-  sku_name = "Consumption_0"
+  publisher_name  = "Clowa"
+  publisher_email = "example@clowa.de"
+  sku_name        = "Consumption_0"
 
   identity {
     type = "SystemAssigned"
@@ -63,12 +64,14 @@ resource "azurerm_api_management_diagnostic" "apim" {
 # Key Vault
 
 resource "azurerm_key_vault" "apim" {
-  name                      = "${local.global_prefix}-apim-kv"
-  resource_group_name       = azurerm_resource_group.this.name
-  location                  = azurerm_resource_group.this.location
-  enable_rbac_authorization = true
+  name                = "${local.global_prefix}-apim-kv"
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
+  tags                = local.tags
+
   tenant_id                 = data.azurerm_client_config.current.tenant_id
   sku_name                  = "standard"
+  enable_rbac_authorization = true
 }
 
 resource "azurerm_role_assignment" "apim_key_vault_secrets_officer" {

@@ -53,7 +53,7 @@ resource "azurerm_api_management_product" "quotes_silver" {
   api_management_name   = azurerm_api_management.apim.name
   display_name          = "Quotes Silver"
   subscription_required = true
-  subscriptions_limit   = 1
+  subscriptions_limit   = 2
   approval_required     = true
   published             = true
 }

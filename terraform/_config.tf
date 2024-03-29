@@ -54,7 +54,7 @@ locals {
   tags = {
     datadog-metrics  = true
     solution         = local.solution
-    application      = local.solution
+    environment      = local.environment
     deploymentMethod = "terraform"
   }
 }

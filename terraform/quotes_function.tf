@@ -214,6 +214,7 @@ resource "azurerm_app_service_custom_hostname_binding" "quotes_clowa_dev" {
 
 resource "azurerm_app_service_managed_certificate" "quotes_clowa_dev" {
   custom_hostname_binding_id = azurerm_app_service_custom_hostname_binding.quotes_clowa_dev.id
+  tags                       = local.tags
 }
 
 resource "azurerm_app_service_certificate_binding" "quotes_clowa_dev" {
