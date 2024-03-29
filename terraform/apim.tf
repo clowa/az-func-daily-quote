@@ -69,9 +69,11 @@ resource "azurerm_key_vault" "apim" {
   location            = azurerm_resource_group.this.location
   tags                = local.tags
 
-  tenant_id                 = data.azurerm_client_config.current.tenant_id
-  sku_name                  = "standard"
-  enable_rbac_authorization = true
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  soft_delete_retention_days = 7
+  purge_protection_enabled   = true
+  sku_name                   = "standard"
+  enable_rbac_authorization  = true
 }
 
 resource "azurerm_role_assignment" "apim_key_vault_secrets_officer" {

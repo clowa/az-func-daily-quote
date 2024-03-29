@@ -26,13 +26,14 @@ resource "azurerm_resource_group" "this" {
 
 #trivy:ignore:AVD-AZU-0013
 resource "azurerm_key_vault" "this" {
-  name                       = "${local.global_prefix}-kv"
-  location                   = azurerm_resource_group.this.location
-  resource_group_name        = azurerm_resource_group.this.name
-  tags                       = local.tags
+  name                = "${local.global_prefix}-kv"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  tags                = local.tags
+
   tenant_id                  = data.azurerm_client_config.current.tenant_id
   soft_delete_retention_days = 7
-  purge_protection_enabled   = false # ToDo: Enable purge protection
+  purge_protection_enabled   = true
   sku_name                   = "standard"
   enable_rbac_authorization  = true
 }
@@ -106,7 +107,7 @@ resource "azurerm_service_plan" "this" {
   name                = "${local.global_prefix}-asp"
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
-  tags                = local.tags #
+  tags                = local.tags
 
   os_type  = "Linux"
   sku_name = "Y1"
