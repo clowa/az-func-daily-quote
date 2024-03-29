@@ -1,3 +1,17 @@
+locals {
+  log_analytics_basic_tables = {
+    AppTraces                    = 90,
+    CDBControlPlaneRequests      = 30,
+    CDBDataPlaneRequests         = 30,
+    CDBCassandraRequests         = 30,
+    CDBGremlinRequests           = 30,
+    CDBMongoRequests             = 30,
+    CDBPartitionKeyRUConsumption = 30,
+    CDBPartitionKeyStatistics    = 30,
+    CDBQueryRuntimeStatistics    = 30,
+  }
+}
+
 ################################################################################
 # Resource Group
 
@@ -41,21 +55,35 @@ resource "azurerm_log_analytics_workspace" "this" {
   sku = "PerGB2018"
 }
 
-data "azapi_resource_id" "app_traces_table" {
+moved {
+  from = data.azapi_resource_id.app_traces_table
+  to   = data.azapi_resource_id.basic_logs["AppTraces"]
+}
+
+data "azapi_resource_id" "basic_logs" {
+  for_each = local.log_analytics_basic_tables
+
   type      = "Microsoft.OperationalInsights/workspaces/tables@2022-10-01"
-  name      = "AppTraces"
+  name      = each.key
   parent_id = azurerm_log_analytics_workspace.this.id
 }
 
-resource "azapi_resource_action" "app_traces_table_basic" {
+moved {
+  from = azapi_resource_action.app_traces_table_basic
+  to   = azapi_resource_action.basic_logs["AppTraces"]
+}
+
+resource "azapi_resource_action" "basic_logs" {
+  for_each = local.log_analytics_basic_tables
+
   type        = "Microsoft.OperationalInsights/workspaces/tables@2022-10-01"
-  resource_id = data.azapi_resource_id.app_traces_table.id
+  resource_id = data.azapi_resource_id.basic_logs[each.key].id
   method      = "PATCH"
 
   body = jsonencode({
     properties = {
       plan                 = "Basic"
-      totalRetentionInDays = 90
+      totalRetentionInDays = each.value
     }
   })
 }
