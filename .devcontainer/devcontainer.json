@@ -1,0 +1,42 @@
+{
+  "name": "Azure Static Web Apps & Astro",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "eamodio.gitlens",
+        "esbenp.prettier-vscode",
+        "DavidAnson.vscode-markdownlint",
+        "EditorConfig.EditorConfig",
+        "task.vscode-task",
+        "AquaSecurityOfficial.trivy-vulnerability-scanner",
+        "ms-azuretools.vscode-docker",
+        "ms-azuretools.vscode-azurefunctions",
+        "ms-vscode.go",
+        "hashicorp.terraform"
+      ]
+    },
+    "settings": {
+      "terminal.integrated.shell.linux": "/bin/bash",
+      "remote.containers.copyGitConfig": true
+    }
+  },
+  "dockerFile": "Dockerfile",
+  // "containerUser": "node",
+  "remoteUser": "codespace",
+  "appPort": 8080,
+  "forwardPorts": [8080, 27017],
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers-contrib/features/go-task:1": {},
+    "ghcr.io/devcontainers-contrib/features/trivy:1": {},
+    "ghcr.io/devcontainers/features/terraform:1": {
+      "installTerraformDocs": true
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly",
+    "source=${localWorkspaceFolder}/terraform/.terraform,target=${containerWorkspaceFolder}/terraform/.terraform,type=bind"
+  ]
+  // "postCreateCommand": ""
+}
