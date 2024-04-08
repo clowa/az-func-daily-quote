@@ -6,6 +6,9 @@
 **.bkp
 **.dtmp
 
+# go task caching
+.task/
+
 # macOS finder stuff
 .DS_Store
 .AppleDouble

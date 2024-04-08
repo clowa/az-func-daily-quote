@@ -7,6 +7,9 @@ tasks:
       - rm -rf ./bin
       - GOOS="linux" GOARCH="amd64" go build -o ./bin/main ./src/main.go
     silent: false
+    sources:
+      - ./*.go
+    method: timestamp
 
   test:
     dir: function
@@ -41,6 +44,6 @@ tasks:
 
   deploy-all:
     description: Deploy the current code and infrastructure
-    tasks:
+    deps:
       - deploy-infra
       - deploy-function
