@@ -8,8 +8,8 @@ tasks:
       - GOOS="linux" GOARCH="amd64" go build -o ./bin/main ./src/main.go
     silent: false
     sources:
-      - ./*.go
-    method: timestamp
+      - "**/*.go"
+    method: checksum
 
   test:
     dir: function
@@ -34,6 +34,9 @@ tasks:
     cmds:
       - func azure functionapp publish cwa-quotes-prod-func --custom
     silent: false
+    sources:
+      - ./bin/*
+    method: checksum
 
   deploy-infra:
     description: Deploy the current infrastructure code
