@@ -22,43 +22,46 @@ const (
 	defaultContextTimeout = 10 * time.Second
 )
 
-// Connects to the CosmosDB instance and returns a container client. Configuration in loaded from the environment.
-func connect() *mongo.Client {
-	config := config.GetConfig()
-
-	ctx, cancel := context.WithTimeout(context.Background(), defaultContextTimeout)
-	defer cancel()
-
-	clientOptions := options.Client().ApplyURI(config.MongodbConnectionString)
-	c, err := mongo.Connect(ctx, clientOptions)
-
-	if err != nil {
-		log.Warnf("unable to initialize connection %v", err)
+func getQuoteHandler(w http.ResponseWriter, r *http.Request) {
+	quoteOfTheDay, err := getQuoteOfTheDay()
+	if quoteOfTheDay.Length == 0 || err != nil {
+		http.Error(w, "Failed to fetch new quote", http.StatusInternalServerError)
+		return
 	}
 
-	err = c.Ping(ctx, nil)
-	if err != nil {
-		log.Warnf("unable to connect %v", err)
-	}
+	log.Infof("Quote of the day: %s by %s", quoteOfTheDay.Content, quoteOfTheDay.Author)
 
-	return c
+	// Write response
+	responseBodyBytes := new(bytes.Buffer)
+	json.NewEncoder(responseBodyBytes).Encode(quoteOfTheDay)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(responseBodyBytes.Bytes())
+	w.WriteHeader(http.StatusOK)
 }
 
-func writeQuoteToDatabase(q *quote.Quote) error {
-	config := config.GetConfig()
-	client := connect()
-	ctx := context.Background()
-	defer client.Disconnect(ctx)
+func getQuoteOfTheDay() (quote.Quote, error) {
+	var quoteOfTheDay quote.Quote
 
-	collection := client.Database(config.MongodbDatabase).Collection(config.MongodbCollection)
-	r, err := collection.InsertOne(ctx, &q)
-	if err != nil {
-		return err
+	today := time.Now().Format("2006-01-02")
+	quoteOfTheDay, err := getQuoteFromDatabase(today)
+	if quoteOfTheDay.Length != 0 || err == nil {
+		return quoteOfTheDay, nil
 	}
+	log.Warnf("Error getting quote from database: %s", err)
 
-	log.Infof("Inserted quote with ID %s", r.InsertedID)
+	quoteOfTheDay, err = getQuoteFromQuotable(true)
+	if quoteOfTheDay.Length != 0 || err == nil {
+		return quoteOfTheDay, nil
+	}
+	log.Warnf("Error getting quote from quotable API: %s", err)
 
-	return nil
+	quoteOfTheDay, err = getRandomQuoteFromDatabase()
+	if quoteOfTheDay.Length != 0 || err == nil {
+		return quoteOfTheDay, nil
+	}
+	log.Warnf("Error getting random quote from database: %s", err)
+
+	return quote.Quote{}, fmt.Errorf("failed to fetch new quote")
 }
 
 func getQuoteFromDatabase(creationDate string) (quote.Quote, error) {
@@ -88,24 +91,26 @@ func getQuoteFromDatabase(creationDate string) (quote.Quote, error) {
 	return quote, nil
 }
 
-func getQuoteFromQuotable(writeToDatabase bool) (quote.Quote, error) {
-	var quoteOfTheDay quote.Quote
+// Connects to the CosmosDB instance and returns a container client. Configuration in loaded from the environment.
+func connect() *mongo.Client {
+	config := config.GetConfig()
 
-	quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
+	ctx, cancel := context.WithTimeout(context.Background(), defaultContextTimeout)
+	defer cancel()
+
+	clientOptions := options.Client().ApplyURI(config.MongodbConnectionString)
+	c, err := mongo.Connect(ctx, clientOptions)
+
 	if err != nil {
-		return quote.Quote{}, fmt.Errorf("error fetching quote from quotable API: %s", err)
-	}
-	q := quotes[0]
-	quoteOfTheDay.LoadFromQuotable(&q)
-
-	if writeToDatabase {
-		err = writeQuoteToDatabase(&quoteOfTheDay)
-		if err != nil {
-			log.Warnf("Error writing quote to database: %s", err)
-		}
+		log.Warnf("unable to initialize connection %v", err)
 	}
 
-	return quoteOfTheDay, nil
+	err = c.Ping(ctx, nil)
+	if err != nil {
+		log.Warnf("unable to connect %v", err)
+	}
+
+	return c
 }
 
 // Gets a random quote from the database by picking a random id of all existing quotes
@@ -168,44 +173,39 @@ func getRandomQuoteFromDatabase() (quote.Quote, error) {
 	return q, nil
 }
 
-func getQuoteOfTheDay() (quote.Quote, error) {
+func getQuoteFromQuotable(writeToDatabase bool) (quote.Quote, error) {
 	var quoteOfTheDay quote.Quote
 
-	today := time.Now().Format("2006-01-02")
-	quoteOfTheDay, err := getQuoteFromDatabase(today)
-	if quoteOfTheDay.Length != 0 || err == nil {
-		return quoteOfTheDay, nil
+	quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
+	if err != nil {
+		return quote.Quote{}, fmt.Errorf("error fetching quote from quotable API: %s", err)
 	}
-	log.Warnf("Error getting quote from database: %s", err)
+	q := quotes[0]
+	quoteOfTheDay.LoadFromQuotable(&q)
 
-	quoteOfTheDay, err = getQuoteFromQuotable(true)
-	if quoteOfTheDay.Length != 0 || err == nil {
-		return quoteOfTheDay, nil
+	if writeToDatabase {
+		err = writeQuoteToDatabase(&quoteOfTheDay)
+		if err != nil {
+			log.Warnf("Error writing quote to database: %s", err)
+		}
 	}
-	log.Warnf("Error getting quote from quotable API: %s", err)
 
-	quoteOfTheDay, err = getRandomQuoteFromDatabase()
-	if quoteOfTheDay.Length != 0 || err == nil {
-		return quoteOfTheDay, nil
-	}
-	log.Warnf("Error getting random quote from database: %s", err)
-
-	return quote.Quote{}, fmt.Errorf("failed to fetch new quote")
+	return quoteOfTheDay, nil
 }
 
-func getQuoteHandler(w http.ResponseWriter, r *http.Request) {
-	quoteOfTheDay, err := getQuoteOfTheDay()
-	if quoteOfTheDay.Length == 0 || err != nil {
-		http.Error(w, "Failed to fetch new quote", http.StatusInternalServerError)
-		return
+func writeQuoteToDatabase(q *quote.Quote) error {
+	config := config.GetConfig()
+	client := connect()
+	ctx := context.Background()
+	defer client.Disconnect(ctx)
+
+	collection := client.Database(config.MongodbDatabase).Collection(config.MongodbCollection)
+	r, err := collection.InsertOne(ctx, &q)
+	if err != nil {
+		return err
 	}
 
-	log.Infof("Quote of the day: %s by %s", quoteOfTheDay.Content, quoteOfTheDay.Author)
+	log.Infof("Inserted quote with ID %s", r.InsertedID)
 
-	// Write response
-	responseBodyBytes := new(bytes.Buffer)
-	json.NewEncoder(responseBodyBytes).Encode(quoteOfTheDay)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(responseBodyBytes.Bytes())
-	w.WriteHeader(http.StatusOK)
+	return nil
 }
