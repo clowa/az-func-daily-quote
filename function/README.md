@@ -2,6 +2,30 @@
 
 This is my first Azure function. It's supposed to be a simple api that returns a quote from [quotable.io](https://api.quotable.io). It uses cosmos db to store the quotes of each day and act like a cache.
 
+## Run locally with docker
+
+1. Run the app via docker compose.
+
+   ```bash
+   docker-compose up 
+   ```
+
+   Make sure to rebuild the image if you made changes to the code
+
+   ```bash
+   docker-compose up --build
+   ```
+
+2. Call the local API at [`http://localhost:8080/api/quote`](http://localhost:8080/api/quote).
+3. The local mongodb is available at `mongodb://localhost:27017` and can be accessed via the user configured in the [`docker-compose.yaml`](./docker-compose.yaml).
+4. When finished you can spin down the environment with
+
+   ```bash
+   docker-compose down
+   ```
+
+   __add `--volumes` to remove the volumes as well__
+
 ## Deployment
 
 1. Complie the binary

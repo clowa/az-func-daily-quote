@@ -38,7 +38,8 @@ services:
     # secrets:
     #   - db-password
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-data:/etc/mongo
+      - ./MongoInit.js:/docker-entrypoint-initdb.d/MongoInit.js:ro
     environment:
       - MONGO_INITDB_ROOT_USERNAME=mongo
       - MONGO_INITDB_ROOT_PASSWORD=SuperSecurePassword
