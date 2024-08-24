@@ -4,9 +4,9 @@ This repository contains the infrastructure and code of an Azure Function App th
 
 ## Repository structure
 
-- `function`: Contains the code of the Azure Function App.
+- [`function`](./function/README.md): Contains the code of the Azure Function App.
 - `terraform`: Contains the infrastructure definition of the Azure Function App.
-- `docs`: Contains general documentation about this project. Please see the `README.md` of each specific function for more detailed information.
+- [`docs`](./docs/README.md): Contains general documentation about this project. Please see the `README.md` of each specific function for more detailed information.
 
 ## Docs
 

@@ -13,30 +13,72 @@ paths:
       responses:
         "200":
           description: A quote object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  content:
+                    type: string
+                  author:
+                    type: string
+                  authorSlug:
+                    type: string
+                  length:
+                    type: integer
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                  creationDate:
+                    type: string
+                    format: date
         "500":
           description: The server failed to retrieve a quote.
     post:
       summary: Write a quote to the database
       operationId: post-quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: "The only limit to our realization of tomorrow is our doubts of today."
+                author:
+                  type: string
+                  example: "Franklin D. Roosevelt"
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  example: ["inspiration", "politics"]
       responses:
         "200":
           description: Success
         "400":
           description: The server failed to parse the request body.
+        "401":
+          description: No authentication was provided. Please see endpoint documentation for authentication requirements.
         "415":
           description: Request header "Content-Type" is not set to "application/json".
         "500":
           description: The server failed to write the quote to the database.
-# components:
-#   securitySchemes:
-#     apiKeyHeader:
-#       type: apiKey
-#       name: Ocp-Apim-Subscription-Key
-#       in: header
-#     apiKeyQuery:
-#       type: apiKey
-#       name: subscription-key
-#       in: query
-# security:
-#   - apiKeyHeader: []
-#   - apiKeyQuery: []
+components:
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: Ocp-Apim-Subscription-Key
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: []
+  - apiKeyQuery: []
