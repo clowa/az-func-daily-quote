@@ -76,6 +76,7 @@ func getQuoteFromDatabase(creationDate string) (quote.Quote, error) {
 	if err != nil {
 		return quote.Quote{}, err
 	}
+	defer results.Close(ctx)
 
 	var quotes []quote.Quote
 	if err = results.All(ctx, &quotes); err != nil {
@@ -133,7 +134,7 @@ func getRandomQuoteFromDatabase() (quote.Quote, error) {
 
 	// Store all ids in an array
 	var ids []interface{}
-	for cursor.Next(ctx) {
+	for ok := cursor.Next(ctx); ok; ok = cursor.Next(ctx) {
 		var result bson.M
 		if err := cursor.Decode(&result); err != nil {
 			log.Errorf("error decoding id: %s", err)
@@ -151,23 +152,16 @@ func getRandomQuoteFromDatabase() (quote.Quote, error) {
 
 	// Pick a random id
 	randomIndex := rand.Intn(len(ids))
-	randomId := ids[randomIndex]
+	chosenId := ids[randomIndex]
 
 	var q quote.Quote
-	if err := collection.FindOne(ctx, bson.M{"_id": randomId}).Decode(&q); err != nil {
+	if err := collection.FindOne(ctx, bson.M{"_id": chosenId}).Decode(&q); err != nil {
 		return quote.Quote{}, fmt.Errorf("error getting quote by id: %s", err)
 	}
 
 	// Update the "creationDate" field of the selected document to the current date
-	today := time.Now().Format("2006-01-02") // Set the current date in "YYYY-MM-DD" format
-	update := bson.M{
-		"$set": bson.M{
-			"creationdate": today,
-		},
-	}
-
-	if _, err = collection.UpdateOne(ctx, bson.M{"_id": randomId}, update); err != nil {
-		log.Errorf("error updating creation date of existing quote: %s", err)
+	if err = q.SaveToDatabase(client, config); err != nil {
+		log.Warnf("Error updating creation date of quote with id %s: %s", q.Id, err)
 	}
 
 	return q, nil
@@ -196,16 +190,5 @@ func getQuoteFromQuotable(writeToDatabase bool) (quote.Quote, error) {
 func writeQuoteToDatabase(q *quote.Quote) error {
 	config := config.GetConfig()
 	client := connect()
-	ctx := context.Background()
-	defer client.Disconnect(ctx)
-
-	collection := client.Database(config.MongodbDatabase).Collection(config.MongodbCollection)
-	r, err := collection.InsertOne(ctx, &q)
-	if err != nil {
-		return err
-	}
-
-	log.Infof("Inserted quote with ID %s", r.InsertedID)
-
-	return nil
+	return q.SaveToDatabase(client, config)
 }

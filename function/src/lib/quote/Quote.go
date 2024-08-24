@@ -1,6 +1,7 @@
 package quote
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -8,18 +9,28 @@ import (
 	"strings"
 	"time"
 
+	"github.com/clowa/az-func-daily-quote/src/lib/config"
 	quotable "github.com/clowa/az-func-daily-quote/src/lib/quotableSdk"
+	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+const (
+	defaultContextTimeout = 10 * time.Second
 )
 
 // Struct representing a quote
 type Quote struct {
-	Id           string   `json:"id"`
-	Content      string   `json:"content"`
-	Author       string   `json:"author"`
-	AuthorSlug   string   `json:"authorSlug"`
-	Length       int      `json:"length"`
-	Tags         []string `json:"tags"`
-	CreationDate string   `json:"creationDate"`
+	InstanceId   primitive.ObjectID `bson:"_id,omitempty" json:"-"`
+	Id           string             `bson:"id" json:"id"`
+	Content      string             `bson:"content" json:"content"`
+	Author       string             `bson:"author" json:"author"`
+	AuthorSlug   string             `bson:"authorslug" json:"authorslug"`
+	Length       int                `bson:"length" json:"length"`
+	Tags         []string           `bson:"tags" json:"tags"`
+	CreationDate string             `bson:"creationdate" json:"creationDate"`
 }
 
 func New() *Quote {
@@ -47,13 +58,40 @@ func generateRandomId(length int) string {
 	return string(b)
 }
 
-func (q *Quote) setId() {
-	q.Id = generateRandomId(11)
+func (q *Quote) SaveToDatabase(client *mongo.Client, config *config.Config) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultContextTimeout)
+	defer cancel()
+
+	q.setCreationDate()
+
+	collection := client.Database(config.MongodbDatabase).Collection(config.MongodbCollection)
+
+	if !q.InstanceId.IsZero() {
+		r, err := collection.ReplaceOne(ctx, bson.M{"_id": q.InstanceId}, q)
+		if err != nil || r.MatchedCount == 0 {
+			return fmt.Errorf("unable to update quote ")
+		}
+		log.Infof("Successfully updated quote with %s", q.InstanceId.String())
+
+		return nil
+	}
+
+	r, err := collection.InsertOne(ctx, &q)
+	if err != nil {
+		return err
+	}
+	log.Infof("Inserted quote with ID %s", r.InsertedID)
+
+	return nil
 }
 
 func (q *Quote) setCreationDate() {
 	today := time.Now().Format("2006-01-02")
 	q.CreationDate = today
+}
+
+func (q *Quote) setId() {
+	q.Id = generateRandomId(11)
 }
 
 func (q *Quote) setLength() {
