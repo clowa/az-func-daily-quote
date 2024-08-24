@@ -19,7 +19,7 @@ type Quote struct {
 	AuthorSlug   string   `json:"authorSlug"`
 	Length       int      `json:"length"`
 	Tags         []string `json:"tags"`
-	CreationDate string   `json:"creationdate"`
+	CreationDate string   `json:"creationDate"`
 }
 
 func New() *Quote {
