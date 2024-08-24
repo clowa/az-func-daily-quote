@@ -100,8 +100,9 @@ resource "azurerm_monitor_diagnostic_setting" "cosmos_db" {
       category = enabled_log.value
     }
   }
+
   metric {
-    category = "Requests"
+    category = "AllMetrics"
     enabled  = false
   }
 }
