@@ -27,10 +27,10 @@ type Quote struct {
 	Id           string             `bson:"id" json:"id"`
 	Content      string             `bson:"content" json:"content"`
 	Author       string             `bson:"author" json:"author"`
-	AuthorSlug   string             `bson:"authorslug" json:"authorslug"`
+	AuthorSlug   string             `bson:"authorSlug" json:"authorSlug"`
 	Length       int                `bson:"length" json:"length"`
 	Tags         []string           `bson:"tags" json:"tags"`
-	CreationDate string             `bson:"creationdate" json:"creationDate"`
+	CreationDate string             `bson:"creationDate" json:"creationDate"`
 }
 
 func New() *Quote {

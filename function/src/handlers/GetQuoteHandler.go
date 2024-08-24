@@ -71,7 +71,7 @@ func getQuoteFromDatabase(creationDate string) (quote.Quote, error) {
 	defer client.Disconnect(ctx)
 
 	collection := client.Database(config.MongodbDatabase).Collection(config.MongodbCollection)
-	filter := bson.D{{Key: "creationdate", Value: creationDate}}
+	filter := bson.D{{Key: "creationDate", Value: creationDate}}
 	results, err := collection.Find(ctx, filter)
 	if err != nil {
 		return quote.Quote{}, err
