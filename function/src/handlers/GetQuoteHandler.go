@@ -44,19 +44,21 @@ func getQuoteOfTheDay() (quote.Quote, error) {
 
 	today := time.Now().Format("2006-01-02")
 	quoteOfTheDay, err := getQuoteFromDatabase(today)
-	if quoteOfTheDay.Length != 0 || err == nil {
+	if quoteOfTheDay.Length > 0 || err == nil {
 		return quoteOfTheDay, nil
 	}
 	log.Warnf("Error getting quote from database: %s", err)
 
+	//! The DNS of the Quotable API is behaving weirdly due to suspicious DNS replication. Some DNS servers are some arn't able to resolve the domain.
+	//! See: https://github.com/lukePeavey/quotable/issues/218#issuecomment-2308378055
 	quoteOfTheDay, err = getQuoteFromQuotable(true)
-	if quoteOfTheDay.Length != 0 || err == nil {
+	if quoteOfTheDay.Length > 0 || err == nil {
 		return quoteOfTheDay, nil
 	}
 	log.Warnf("Error getting quote from quotable API: %s", err)
 
 	quoteOfTheDay, err = getRandomQuoteFromDatabase()
-	if quoteOfTheDay.Length != 0 || err == nil {
+	if quoteOfTheDay.Length > 0 || err == nil {
 		return quoteOfTheDay, nil
 	}
 	log.Warnf("Error getting random quote from database: %s", err)
@@ -83,7 +85,7 @@ func getQuoteFromDatabase(creationDate string) (quote.Quote, error) {
 		return quote.Quote{}, err
 	}
 
-	if len(quotes) == 0 {
+	if !(len(quotes) > 0) {
 		return quote.Quote{}, fmt.Errorf("no quotes found for creation date %s", creationDate)
 	}
 
@@ -173,15 +175,19 @@ func getQuoteFromQuotable(writeToDatabase bool) (quote.Quote, error) {
 	quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
 	if err != nil {
 		return quote.Quote{}, fmt.Errorf("error fetching quote from quotable API: %s", err)
+	} else if !(len(quotes) > 0) {
+		return quote.Quote{}, fmt.Errorf("quotable API hasn't returned any quotes")
 	}
 	q := quotes[0]
 	quoteOfTheDay.LoadFromQuotable(&q)
 
-	if writeToDatabase {
-		err = writeQuoteToDatabase(&quoteOfTheDay)
-		if err != nil {
-			log.Warnf("Error writing quote to database: %s", err)
-		}
+	if !writeToDatabase {
+		return quoteOfTheDay, nil
+	}
+
+	err = writeQuoteToDatabase(&quoteOfTheDay)
+	if err != nil {
+		log.Warnf("Error writing quote to database: %s", err)
 	}
 
 	return quoteOfTheDay, nil

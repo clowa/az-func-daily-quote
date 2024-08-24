@@ -63,13 +63,17 @@ func (q *Quote) SaveToDatabase(client *mongo.Client, config *config.Config) erro
 	defer cancel()
 
 	q.setCreationDate()
-
 	collection := client.Database(config.MongodbDatabase).Collection(config.MongodbCollection)
 
-	if !q.InstanceId.IsZero() {
-		r, err := collection.ReplaceOne(ctx, bson.M{"_id": q.InstanceId}, q)
+	i, err := collection.CountDocuments(ctx, bson.M{"id": q.Id})
+	if err != nil {
+		return fmt.Errorf("unable to check if quote exists in database: %v", err)
+	}
+
+	if i > 0 {
+		r, err := collection.ReplaceOne(ctx, bson.M{"id": q.Id}, q)
 		if err != nil || r.MatchedCount == 0 {
-			return fmt.Errorf("unable to update quote ")
+			return fmt.Errorf("unable to update quote with id %s: %v", q.Id, err)
 		}
 		log.Infof("Successfully updated quote with %s", q.InstanceId.String())
 
@@ -103,7 +107,7 @@ func (q *Quote) setAuthorSlug() {
 	q.AuthorSlug = strings.ReplaceAll(lower, " ", "-")
 }
 
-func (q *Quote) LoadFromQuotable(i *quotable.QuoteResponse) *Quote {
+func (q *Quote) LoadFromQuotable(i *quotable.QuoteResponse) {
 	q.Id = i.Id
 	q.Content = i.Content
 	q.Author = i.Author
@@ -112,7 +116,6 @@ func (q *Quote) LoadFromQuotable(i *quotable.QuoteResponse) *Quote {
 	q.Tags = i.Tags
 
 	q.setCreationDate()
-	return q
 }
 
 func (q *Quote) LoadFromRequest(r *http.Request) (*Quote, error) {
