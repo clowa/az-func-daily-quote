@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -87,30 +88,116 @@ func getQuoteFromDatabase(creationDate string) (quote.Quote, error) {
 	return quote, nil
 }
 
-func getQuoteHandler(w http.ResponseWriter, r *http.Request) {
+func getQuoteFromQuotable(writeToDatabase bool) (quote.Quote, error) {
 	var quoteOfTheDay quote.Quote
 
-	today := time.Now().Format("2006-01-02")
-	quoteOfTheDay, err := getQuoteFromDatabase(today)
-	// quoteOfTheDay, err := Quote{}, fmt.Errorf("no quote found")
+	quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
+	if err != nil {
+		return quote.Quote{}, fmt.Errorf("error fetching quote from quotable API: %s", err)
+	}
+	q := quotes[0]
+	quoteOfTheDay.LoadFromQuotable(&q)
 
-	if quoteOfTheDay.Length == 0 || err != nil {
-		log.Warnf("Error getting quote from database: %s", err)
-		log.Info("Fetching quote from quotable API")
-		quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
-		if err != nil {
-			log.Warnf("Error fetching quote from quotable API: %s", err)
-			http.Error(w, "Failed to fetch new quote", http.StatusInternalServerError)
-			return
-		}
-		quote := quotes[0]
-
-		// Write quote to database
-		quoteOfTheDay.LoadFromQuotable(&quote)
+	if writeToDatabase {
 		err = writeQuoteToDatabase(&quoteOfTheDay)
 		if err != nil {
 			log.Warnf("Error writing quote to database: %s", err)
 		}
+	}
+
+	return quoteOfTheDay, nil
+}
+
+// Gets a random quote from the database by picking a random id of all existing quotes
+func getRandomQuoteFromDatabase() (quote.Quote, error) {
+	config := config.GetConfig()
+	client := connect()
+	ctx, cancel := context.WithTimeout(context.Background(), defaultContextTimeout)
+	defer cancel()
+	defer client.Disconnect(ctx)
+
+	// Get all available ids
+	// TODO: Limit the number of ids to avoid performance issues
+	collection := client.Database(config.MongodbDatabase).Collection(config.MongodbCollection)
+	projection := bson.M{"_id": 1}
+	cursor, err := collection.Find(ctx, bson.D{}, options.Find().SetProjection(projection))
+	if err != nil {
+		return quote.Quote{}, fmt.Errorf("error getting all ids: %s", err)
+	}
+	defer cursor.Close(ctx)
+
+	// Store all ids in an array
+	var ids []interface{}
+	for cursor.Next(ctx) {
+		var result bson.M
+		if err := cursor.Decode(&result); err != nil {
+			log.Errorf("error decoding id: %s", err)
+		}
+		ids = append(ids, result["_id"])
+	}
+	if err := cursor.Err(); err != nil {
+		return quote.Quote{}, fmt.Errorf("error iterating over ids: %s", err)
+	}
+
+	// Fail if no ids were found
+	if len(ids) == 0 {
+		return quote.Quote{}, fmt.Errorf("no quotes found")
+	}
+
+	// Pick a random id
+	randomIndex := rand.Intn(len(ids))
+	randomId := ids[randomIndex]
+
+	var q quote.Quote
+	if err := collection.FindOne(ctx, bson.M{"_id": randomId}).Decode(&q); err != nil {
+		return quote.Quote{}, fmt.Errorf("error getting quote by id: %s", err)
+	}
+
+	// Update the "creationDate" field of the selected document to the current date
+	today := time.Now().Format("2006-01-02") // Set the current date in "YYYY-MM-DD" format
+	update := bson.M{
+		"$set": bson.M{
+			"creationdate": today,
+		},
+	}
+
+	if _, err = collection.UpdateOne(ctx, bson.M{"_id": randomId}, update); err != nil {
+		log.Errorf("error updating creation date of existing quote: %s", err)
+	}
+
+	return q, nil
+}
+
+func getQuoteOfTheDay() (quote.Quote, error) {
+	var quoteOfTheDay quote.Quote
+
+	today := time.Now().Format("2006-01-02")
+	quoteOfTheDay, err := getQuoteFromDatabase(today)
+	if quoteOfTheDay.Length != 0 || err == nil {
+		return quoteOfTheDay, nil
+	}
+	log.Warnf("Error getting quote from database: %s", err)
+
+	quoteOfTheDay, err = getQuoteFromQuotable(true)
+	if quoteOfTheDay.Length != 0 || err == nil {
+		return quoteOfTheDay, nil
+	}
+	log.Warnf("Error getting quote from quotable API: %s", err)
+
+	quoteOfTheDay, err = getRandomQuoteFromDatabase()
+	if quoteOfTheDay.Length != 0 || err == nil {
+		return quoteOfTheDay, nil
+	}
+	log.Warnf("Error getting random quote from database: %s", err)
+
+	return quote.Quote{}, fmt.Errorf("failed to fetch new quote")
+}
+
+func getQuoteHandler(w http.ResponseWriter, r *http.Request) {
+	quoteOfTheDay, err := getQuoteOfTheDay()
+	if quoteOfTheDay.Length == 0 || err != nil {
+		http.Error(w, "Failed to fetch new quote", http.StatusInternalServerError)
+		return
 	}
 
 	log.Infof("Quote of the day: %s by %s", quoteOfTheDay.Content, quoteOfTheDay.Author)
