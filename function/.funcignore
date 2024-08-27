@@ -11,6 +11,7 @@ test
 **.go
 go.mod
 go.sum
+**/tests
 
 # macOS Finder files
 *.DS_Store
