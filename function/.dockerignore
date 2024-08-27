@@ -28,5 +28,8 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
+openapi.yaml
 LICENSE
 README.md
+
+**/testdata
