@@ -23,6 +23,10 @@ jobs:
           go-version-file: function/go.mod
           cache-dependency-path: function/go.sum
 
+      - name: Install dependencies
+        working-directory: function
+        run: go mod download
+
       # - name: Start containers
       #   working-directory: function
       #   run: docker-compose -f docker-compose.yaml up -d --wait --build
