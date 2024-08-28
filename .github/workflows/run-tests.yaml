@@ -1,0 +1,36 @@
+name: Run tests
+
+on:
+  push:
+    branches:
+      - main
+      - feature/**
+      - dependabot/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  tests:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ">=1.23.0" # The Go version to download (if necessary) and use.
+
+      # - name: Start containers
+      #   working-directory: function
+      #   run: docker-compose -f docker-compose.yaml up -d --wait --build
+
+      - name: Run tests
+        working-directory: function
+        run: go test ./... >> $GITHUB_STEP_SUMMARY
+
+      # - name: Stop containers
+      #   if: always()
+      #   working-directory: function
+      #   run: docker-compose -f docker-compose.yaml down --volumes
