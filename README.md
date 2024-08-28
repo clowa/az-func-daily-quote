@@ -1,3 +1,5 @@
+[![Tests](https://github.com/clowa/az-func-daily-quote/actions/workflows/run-tests.yaml/badge.svg)](https://github.com/clowa/az-func-daily-quote/actions/workflows/run-tests.yaml)
+
 # Daily quote API
 
 This repository contains the infrastructure and code of an Azure Function App that serves an API for quotes.
