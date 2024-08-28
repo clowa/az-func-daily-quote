@@ -1,0 +1,35 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly" # on the first of every month
+      day: "friday"
+      time: "16:00"
+      timezone: "Europe/Berlin"
+    assignees:
+      - clowa
+
+  #########################################
+  # Application
+  - package-ecosystem: "gomod"
+    directory: "/function"
+    schedule:
+      interval: "monthly"
+      day: "friday"
+      time: "16:00"
+      timezone: "Europe/Berlin"
+    assignees:
+      - clowa
+    allow:
+      - dependency-type: "direct"
+
+  # - package-ecosystem: "terraform"
+  #   directory: "/terraform"
+  #   schedule:
+  #     interval: "monthly"
+  #     day: "friday"
+  #     time: "16:00"
+  #     timezone: "Europe/Berlin"
+  #   assignees:
+  #     - clowa
