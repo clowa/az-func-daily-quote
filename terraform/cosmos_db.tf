@@ -102,7 +102,11 @@ resource "azurerm_monitor_diagnostic_setting" "cosmos_db" {
   }
 
   metric {
-    category = "AllMetrics"
-    enabled  = false
+    category = "Requests"
+    enabled  = true
+  }
+  metric {
+    category = "SLI"
+    enabled  = true
   }
 }

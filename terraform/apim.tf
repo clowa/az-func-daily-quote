@@ -32,10 +32,11 @@ resource "azurerm_api_management_diagnostic" "apim" {
   identifier               = "applicationinsights"
   api_management_logger_id = azurerm_api_management_logger.apim_application_insights.id
 
-  sampling_percentage = 10.0
-  always_log_errors   = true
-  log_client_ip       = true
-  verbosity           = "information"
+  operation_name_format = "Name"
+  sampling_percentage   = 10.0
+  always_log_errors     = true
+  log_client_ip         = true
+  verbosity             = "information"
 }
 
 # resource "azurerm_api_management_policy" "apim" {

@@ -1,14 +1,10 @@
 # syntax=docker/dockerfile:1
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
-
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
+ARG ALPINE_VERSION=3.20
+ARG GO_VERSION=1.22
 
 ################################################################################
 # Create a stage for building the application.
-ARG GO_VERSION=1.22
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION} AS build
 WORKDIR /app
 
@@ -21,7 +17,7 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=bind,source=go.mod,target=go.mod \
     go mod download -x
 
-#! Copy the application source code into the container.
+# Copy the application source code into the container.
 COPY . .
 
 # This is the architecture you’re building for, which is passed in by the builder.
@@ -34,27 +30,23 @@ ARG TARGETARCH
 # source code into the container.
 WORKDIR /app/src
 RUN --mount=type=cache,target=/go/pkg/mod/ \
-    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/server 
+    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/main 
 
 ################################################################################
 # Create a new stage for running the application that contains the minimal
 # runtime dependencies for the application. This often uses a different base
 # image from the build stage where the necessary files are copied from the build
 # stage.
-#
-# The example below uses the alpine image as the foundation for running the app.
-# By specifying the "latest" tag, it will also use whatever happens to be the
-# most recent version of that image when you build your Dockerfile. If
-# reproducability is important, consider using a versioned tag
-# (e.g., alpine:3.17.2) or SHA (e.g., alpine@sha256:c41ab5c992deb4fe7e5da09f67a8804a46bd0592bfdf0b1847dde0e0889d2bff).
-FROM alpine:latest AS final
+FROM alpine:${ALPINE_VERSION} AS final
+
+ARG APP_PORT
 
 # Install any runtime dependencies that are needed to run your application.
 # Leverage a cache mount to /var/cache/apk/ to speed up subsequent builds.
 RUN --mount=type=cache,target=/var/cache/apk \
     apk --update add \
         ca-certificates \
-        tzdata \
+        curl \
         && \
         update-ca-certificates
 
@@ -72,10 +64,11 @@ RUN adduser \
 USER appuser
 
 # Copy the executable from the "build" stage.
-COPY --from=build /bin/server /bin/
+COPY --from=build /bin/main /bin/
 
 # Expose the port that the application listens on.
-EXPOSE 8080
+ENV FUNCTIONS_CUSTOMHANDLER_PORT=${APP_PORT}
+EXPOSE ${APP_PORT}
 
 # What the container should run when it is started.
-ENTRYPOINT [ "/bin/server" ]
+ENTRYPOINT [ "/bin/main" ]

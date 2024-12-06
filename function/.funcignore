@@ -12,5 +12,18 @@ test
 go.mod
 go.sum
 
+# Docker files
+Dockerfile
+Dockerfile.*
+.dockerignore
+docker-compose*
+
+# Metadata files
+openapi.yaml
+
+# App tests
+**/tests
+**/testdata
+
 # macOS Finder files
 *.DS_Store

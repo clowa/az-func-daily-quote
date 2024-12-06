@@ -1,16 +1,6 @@
 version: "3"
 
 tasks:
-  build:
-    dir: function
-    cmds:
-      - rm -rf ./bin
-      - GOOS="linux" GOARCH="amd64" go build -o ./bin/main ./src/main.go
-    silent: false
-    sources:
-      - "**/*.go"
-    method: checksum
-
   test:
     dir: function
     cmds:
@@ -28,8 +18,18 @@ tasks:
       - docker compose down
     silent: false
 
+  build-function:
+    dir: function
+    cmds:
+      - rm -rf ./bin
+      - CGO_ENABLED=0 GOOS="linux" GOARCH="amd64" go build -o ./bin/main ./src/main.go
+    silent: false
+    sources:
+      - "**/*.go"
+    method: checksum
+
   deploy-function:
-    deps: [build]
+    deps: [build-function]
     dir: function
     cmds:
       - func azure functionapp publish cwa-quotes-prod-func --custom

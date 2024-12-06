@@ -14,13 +14,22 @@ services:
       - db
     build:
       context: .
+      dockerfile: Dockerfile
       target: final
-    environment:
+      args: &args
+        - GO_VERSION=1.22
+        - APP_PORT=8080
+    environment: &env
       - MONGODB_CONNECTION_STRING=mongodb://mongo:SuperSecurePassword@db:27017
       - MONGODB_DATABASE=quotes
       - MONGODB_COLLECTION=quotes
     ports:
       - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
 
   # The commented out section below is an example of how to define a PostgreSQL
   # database that your application can use. `depends_on` tells Docker Compose to
@@ -38,8 +47,8 @@ services:
     # secrets:
     #   - db-password
     volumes:
-      - db-data:/etc/mongo
-      - ./MongoInit.js:/docker-entrypoint-initdb.d/MongoInit.js:ro
+      - db-data:/data/db
+      - ./testdata/MongoInit.js:/docker-entrypoint-initdb.d/MongoInit.js:ro
     environment:
       - MONGO_INITDB_ROOT_USERNAME=mongo
       - MONGO_INITDB_ROOT_PASSWORD=SuperSecurePassword
@@ -50,9 +59,9 @@ services:
     ports:
       - 27017:27017
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet
-      interval: 10s
-      timeout: 10s
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 5s
       retries: 5
 volumes:
   db-data:

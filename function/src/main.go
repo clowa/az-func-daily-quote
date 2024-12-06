@@ -15,6 +15,7 @@ func main() {
 
 	listenAddr := globalConfig.ApiPort
 
+	http.HandleFunc("/health", handlers.HealthRouter)
 	http.HandleFunc("/api/quote", handlers.QuoteRouter)
 	log.Printf("About to listen on %s. Go to https://127.0.0.1%s/", listenAddr, listenAddr)
 	log.Fatal(http.ListenAndServe(listenAddr, nil))

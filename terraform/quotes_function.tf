@@ -29,24 +29,19 @@ resource "azurerm_storage_account" "quotes" {
   location            = azurerm_resource_group.quotes.location
   tags                = local.tags
 
-  account_tier                    = "Standard"
-  account_kind                    = "StorageV2"
-  access_tier                     = "Hot"
-  account_replication_type        = "LRS"
-  min_tls_version                 = "TLS1_2"
-  allow_nested_items_to_be_public = false
-  default_to_oauth_authentication = true
+  cross_tenant_replication_enabled = false
+  account_tier                     = "Standard"
+  account_kind                     = "StorageV2"
+  access_tier                      = "Hot"
+  account_replication_type         = "LRS"
+  min_tls_version                  = "TLS1_2"
+  allow_nested_items_to_be_public  = false
+  default_to_oauth_authentication  = true
 
   blob_properties {
     change_feed_enabled      = false
     last_access_time_enabled = false
     versioning_enabled       = false
-  }
-
-  #trivy:ignore:AVD-AZU-0012
-  network_rules {
-    bypass         = ["AzureServices"]
-    default_action = "Allow"
   }
 }
 
@@ -77,6 +72,9 @@ resource "azurerm_linux_function_app" "quotes" {
     ## Required for Run From Package deployment, eg. if deployed from VS Code or Function Tools
     # AzureWebJobsStorage   = azurerm_storage_account.quotes.primary_connection_string # Same as storage_account_access_key
     WEBSITE_MOUNT_ENABLED = "1"
+
+    ## Ensures that site configuration is always applied to all instances of the function app
+    WEBSITE_ENABLE_SYNC_UPDATE_SITE = "1"
 
     ## Required for MSI to access the storage account
     ## See: https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-powershell#connecting-to-host-storage-with-an-identity
