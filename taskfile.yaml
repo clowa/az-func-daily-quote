@@ -22,7 +22,7 @@ tasks:
     dir: function
     cmds:
       - rm -rf ./bin
-      - GOOS="linux" GOARCH="amd64" go build -o ./bin/main ./src/main.go
+      - CGO_ENABLED=0 GOOS="linux" GOARCH="amd64" go build -o ./bin/main ./src/main.go
     silent: false
     sources:
       - "**/*.go"

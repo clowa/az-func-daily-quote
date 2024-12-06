@@ -31,7 +31,7 @@ This is my first Azure function. It's supposed to be a simple api that returns a
 1. Complie the binary
 
    ```pwsh
-   $env:GOOS="linux"; $env:GOARCH="amd64"; go build -o ./bin/main ./src/main.go
+   $env:CGO_ENABLED=0; $env:GOOS="linux"; $env:GOARCH="amd64"; go build -o ./bin/main ./src/main.go
    ```
 
 2. Deploy the function via zip bundle.
