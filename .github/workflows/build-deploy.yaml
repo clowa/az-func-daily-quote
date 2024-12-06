@@ -29,11 +29,7 @@ jobs:
 
       - name: Build binary
         working-directory: function
-        env:
-          GOOS: linux
-          GOARCH: amd64
-        run: |
-          go build -o ./bin/main ./src/main.go
+        run: GOOS="linux" GOARCH="amd64" go build -o ./bin/main ./src/main.go
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
