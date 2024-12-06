@@ -1,0 +1,58 @@
+name: Deploy Function App
+
+on:
+  push:
+    branches:
+      - main
+      - feature/testing # ToDo: Remove this line
+
+jobs:
+  build:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: function/go.mod
+          cache-dependency-path: function/go.sum
+
+      - name: Install dependencies
+        working-directory: function
+        run: go mod download
+
+      - name: Build binary
+        working-directory: function
+        env:
+          GOOS: linux
+          GOARCH: amd64
+        run: |
+          go build -o ./bin/main ./src/main.go
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: function-artifact
+          path: function/bin/main
+
+  deploy:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download binary
+        uses: actions/download-artifact@v4
+        with:
+          name: function-artifact
+
+      - name: Show local directory
+        run: ls -laR
+
+      - name: Deploy to Azure Function App
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ vars.AZURE_FUNCTIONAPP_NAME }}
+          package: function/bin/main
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
