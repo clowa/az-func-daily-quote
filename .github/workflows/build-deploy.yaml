@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feature/testing # ToDo: Remove this line
 
 permissions:
   contents: read
