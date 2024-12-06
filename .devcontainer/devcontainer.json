@@ -34,9 +34,6 @@
     },
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
-  "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly",
-    "source=${localWorkspaceFolder}/terraform/.terraform,target=${containerWorkspaceFolder}/terraform/.terraform,type=bind"
-  ]
+  "mounts": ["source=${localWorkspaceFolder}/terraform/.terraform,target=${containerWorkspaceFolder}/terraform/.terraform,type=bind"]
   // "postCreateCommand": ""
 }
