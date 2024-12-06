@@ -6,6 +6,9 @@ on:
       - main
       - feature/**
       - dependabot/**
+    paths:
+      - 'function/**'
+      - '.github/workflows/**'
   pull_request:
     branches:
       - main
