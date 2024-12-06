@@ -35,10 +35,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: function-artifact
+          if-no-files-found: error
+          include-hidden-files: true # to include .funcignore file
           path: |
             function/bin
             function/host.json
             function/.funcignore
+            function/**/function.json
 
   deploy:
     timeout-minutes: 5
