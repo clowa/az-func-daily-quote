@@ -29,13 +29,14 @@ resource "azurerm_storage_account" "quotes" {
   location            = azurerm_resource_group.quotes.location
   tags                = local.tags
 
-  account_tier                    = "Standard"
-  account_kind                    = "StorageV2"
-  access_tier                     = "Hot"
-  account_replication_type        = "LRS"
-  min_tls_version                 = "TLS1_2"
-  allow_nested_items_to_be_public = false
-  default_to_oauth_authentication = true
+  cross_tenant_replication_enabled = false
+  account_tier                     = "Standard"
+  account_kind                     = "StorageV2"
+  access_tier                      = "Hot"
+  account_replication_type         = "LRS"
+  min_tls_version                  = "TLS1_2"
+  allow_nested_items_to_be_public  = false
+  default_to_oauth_authentication  = true
 
   blob_properties {
     change_feed_enabled      = false
