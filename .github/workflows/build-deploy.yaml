@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'function/**'
+      - '.github/workflows/**'
 
 permissions:
   contents: read
@@ -49,7 +52,7 @@ jobs:
     steps:
       ## We have to use the RBAC authentication method to force action Azure/functions-action@v1 to deploy via RUN_FROM_PACKAGE
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           client-id: ${{ secrets.ARM_CLIENT_ID }}
