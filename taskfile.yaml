@@ -18,7 +18,7 @@ tasks:
       - docker compose down
     silent: false
 
-  build-function:
+  build:
     dir: function
     cmds:
       - rm -rf ./bin
@@ -28,25 +28,12 @@ tasks:
       - "**/*.go"
     method: checksum
 
-  deploy-function:
-    deps: [build-function]
+  deploy:
+    deps: [build]
     dir: function
     cmds:
-      - func azure functionapp publish cwa-quotes-prod-func --custom
+      - func azure functionapp publish cwa-ws-prod-func-quotes-func --custom
     silent: false
     sources:
       - ./bin/*
     method: checksum
-
-  deploy-infra:
-    description: Deploy the current infrastructure code
-    dir: terraform
-    cmds:
-      - terraform init
-      - terraform apply
-
-  deploy-all:
-    description: Deploy the current code and infrastructure
-    deps:
-      - deploy-infra
-      - deploy-function
