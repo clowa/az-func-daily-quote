@@ -22,6 +22,8 @@ func (c *Config) LoadConfig() {
 	c.ApiPort = ":8080"
 	if val, ok := os.LookupEnv("FUNCTIONS_CUSTOMHANDLER_PORT"); ok {
 		c.ApiPort = ":" + val
+	} else if val, ok := os.LookupEnv("APP_PORT"); ok {
+		c.ApiPort = ":" + val
 	}
 
 	c.MongodbConnectionString = os.Getenv("MONGODB_CONNECTION_STRING")

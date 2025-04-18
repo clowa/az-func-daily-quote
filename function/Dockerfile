@@ -72,3 +72,28 @@ EXPOSE ${APP_PORT}
 
 # What the container should run when it is started.
 ENTRYPOINT [ "/bin/main" ]
+
+
+################################################################################
+# Create a new stage for building the image specific for azure app service.
+FROM alpine:${ALPINE_VERSION} AS appservice
+
+ARG APP_PORT=8080
+
+# Copy app service ssh config
+COPY ./appservice/sshd_config /etc/ssh/sshd_config
+COPY ./appservice/entrypoint.sh /
+
+# Start and enable SSH
+RUN apk add openssh \
+    && echo "root:Docker!" | chpasswd \
+    && chmod +x /entrypoint.sh \
+    && cd /etc/ssh/ \
+    && ssh-keygen -A
+
+# Copy the executable from the "build" stage.
+COPY --from=build /bin/main /bin/
+
+# Expose the port that the application listens on.
+ENV APP_PORT=${APP_PORT}
+EXPOSE 2222 ${APP_PORT}
