@@ -63,6 +63,9 @@ jobs:
         with:
           name: function-artifact
 
+      - name: Set execute permission on binary
+        run: chmod +x ./bin/main
+
       - name: Show local directory
         run: ls -laR
 
@@ -71,4 +74,3 @@ jobs:
         with:
           app-name: ${{ vars.AZURE_FUNCTIONAPP_NAME }}
           respect-funcignore: true
-          sku: flexconsumption # This may not be necessary since we are using OIDC
