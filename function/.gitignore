@@ -20,7 +20,8 @@ __azurite_db*__.json
 *.so
 *.dylib
 # Ignore binary output folder
-bin/**
+bin/
+**/bin/**
 
 # Test binary, built with `go test -c`
 *.test
