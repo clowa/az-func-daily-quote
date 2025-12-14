@@ -1,24 +1,42 @@
 version: "3"
 
+vars:
+  FUNCTION_APP_NAME: cwa-ws-prod-func-quotes-func
+
 tasks:
   test:
     dir: function
     cmds:
       - go test ./...
 
-  run-locally:
+  container:build:
+    dir: function
+    cmds:
+      - container system start
+      - container build -t clowa/az-func-quote:dev .
+    sources:
+      - "**/*.go"
+    method: checksum
+
+  container:run:
+    dir: function
+    deps: [container:build]
+    cmds:
+      - container run -p 8080:8080 clowa/az-func-quote:dev
+
+  compose:up:
     dir: function
     cmds:
       - docker compose up {{.CLI_ARGS}}
     silent: false
 
-  down:
+  compose:down:
     dir: function
     cmds:
       - docker compose down
     silent: false
 
-  build:
+  function:build:
     dir: function
     cmds:
       - rm -rf ./bin
@@ -28,12 +46,14 @@ tasks:
       - "**/*.go"
     method: checksum
 
-  deploy:
-    deps: [build]
+  function:deploy:
+    deps: [function:build]
     dir: function
     cmds:
-      - func azure functionapp publish cwa-ws-prod-func-quotes-func --custom
+      - func azure functionapp publish {{.FUNCTION_APP_NAME}} --custom
     silent: false
     sources:
       - ./bin/*
+      - host.json
+      - "**/function.json"
     method: checksum
