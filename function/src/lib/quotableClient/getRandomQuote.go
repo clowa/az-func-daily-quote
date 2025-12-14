@@ -1,4 +1,4 @@
-package quotableSdk
+package quotableClient
 
 import (
 	"encoding/json"
@@ -8,10 +8,6 @@ import (
 
 	"github.com/google/go-querystring/query"
 	log "github.com/sirupsen/logrus"
-)
-
-const (
-	getRandomQuotePath = "/quotes/random"
 )
 
 type GetRandomQuoteQueryParams struct {
@@ -26,7 +22,7 @@ type GetRandomQuoteQueryParams struct {
 type commaSeparatedQueryString []string
 
 func (qp commaSeparatedQueryString) EncodeValues(key string, v *url.Values) error {
-	if (qp == nil) || (len(qp) == 0) {
+	if len(qp) == 0 {
 		return nil
 	}
 
@@ -52,23 +48,22 @@ type QuoteResponse struct {
 	Tags       []string `json:"tags"`
 }
 
-func GetRandomQuote(params GetRandomQuoteQueryParams) ([]QuoteResponse, error) {
+func (c *QuotableClient) GetRandomQuote(params GetRandomQuoteQueryParams) ([]QuoteResponse, error) {
+	const getRandomQuotePath = "/quotes/random"
 
 	urlValues, err := query.Values(params)
 	if err != nil {
 		return []QuoteResponse{}, err
 	}
 
-	apiEndpoint := quotableApiUrl + getRandomQuotePath + "?" + urlValues.Encode()
+	apiEndpoint := c.baseUrl + getRandomQuotePath + "?" + urlValues.Encode()
 	log.Infof("Fetching quote from %s", apiEndpoint)
 	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
 	if err != nil {
 		return []QuoteResponse{}, fmt.Errorf("failed to create request: %s", err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return []QuoteResponse{}, fmt.Errorf("failed to make request: %s", err)
 	}
