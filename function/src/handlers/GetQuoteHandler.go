@@ -173,7 +173,7 @@ func getQuoteFromQuotable(writeToDatabase bool) (quote.Quote, error) {
 	var quoteOfTheDay quote.Quote
 
 	quotableClient := quotable.NewQuotableClient()
-	quotes, err := quotableClient.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
+	quotes, err := quotableClient.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: "technology"})
 
 	if err != nil {
 		return quote.Quote{}, fmt.Errorf("error fetching quote from quotable API: %s", err)

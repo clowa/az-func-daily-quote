@@ -3,5 +3,13 @@
   "azureFunctions.projectLanguage": "Custom",
   "azureFunctions.projectRuntime": "~4",
   "debug.internalConsoleOptions": "neverOpen",
-  "cSpell.words": ["azcore", "azcosmos", "azidentity", "bson", "Infof", "Warnf"]
+  "cSpell.words": [
+    "azcore",
+    "azcosmos",
+    "azidentity",
+    "bson",
+    "Infof",
+    "quoteable",
+    "Warnf"
+  ]
 }

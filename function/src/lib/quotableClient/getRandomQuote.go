@@ -4,39 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/google/go-querystring/query"
 	log "github.com/sirupsen/logrus"
 )
 
 type GetRandomQuoteQueryParams struct {
-	Limit     int                       `url:"limit,omitempty"`
-	MaxLength int                       `url:"maxLength,omitempty"`
-	MinLength int                       `url:"minLength,omitempty"`
-	Tags      commaSeparatedQueryString `url:"tags,omitempty"`
-	Author    string                    `url:"author,omitempty"`
-	AuthorId  string                    `url:"authorId,omitempty"`
-}
-
-type commaSeparatedQueryString []string
-
-func (qp commaSeparatedQueryString) EncodeValues(key string, v *url.Values) error {
-	if len(qp) == 0 {
-		return nil
-	}
-
-	var tags string
-	for i, tag := range qp {
-		// If we are at the last tag, don't add a comma
-		if i == len(qp)-1 {
-			tags = tags + tag
-			continue
-		}
-		tags = tags + tag + ","
-	}
-	v.Set(key, tags)
-	return nil
+	Limit     int `url:"limit,omitempty"`
+	MaxLength int `url:"maxLength,omitempty"`
+	MinLength int `url:"minLength,omitempty"`
+	// Tags can be a comma-separated list of tags and supports logical OR (|) and AND (,) operators
+	Tags     string `url:"tags,omitempty"`
+	Author   string `url:"author,omitempty"`
+	AuthorId string `url:"authorId,omitempty"`
 }
 
 type QuoteResponse struct {
