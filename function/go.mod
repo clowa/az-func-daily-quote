@@ -1,8 +1,6 @@
 module github.com/clowa/az-func-daily-quote
 
-go 1.22
-
-toolchain go1.23.0
+go 1.25
 
 require (
 	github.com/google/go-querystring v1.1.0
