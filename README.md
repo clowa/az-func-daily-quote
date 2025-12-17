@@ -22,46 +22,46 @@ Documentation can be found in the [`docs`](./docs/README.md) folder.
 
   ```bash
   $ hey -m GET https://quotes.clowa.dev/api/quote
-
   Summary:
-  Total:        38.4224 secs
-  Slowest:      18.2495 secs
-  Fastest:      4.1377 secs
-  Average:      7.7343 secs
-  Requests/sec: 5.2053
+    Total:        6.5917 secs
+    Slowest:      5.9453 secs
+    Fastest:      0.1018 secs
+    Average:      0.6637 secs
+    Requests/sec: 30.3410
+    
+    Total data:   41000 bytes
+    Size/request: 205 bytes
 
-  Total data:   45597 bytes
-  Size/request: 229 bytes
+  Response time histogram:
+    0.102 [1]     |
+    0.686 [147]   |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+    1.271 [11]    |■■■
+    1.855 [24]    |■■■■■■■
+    2.439 [1]     |
+    3.024 [13]    |■■■■
+    3.608 [2]     |■
+    4.192 [0]     |
+    4.777 [0]     |
+    5.361 [0]     |
+    5.945 [1]     |
 
-    Response time histogram:
-    4.138 [1] |
-    5.549 [52] |■■■■■■■■■■■■■■■■■■■■■■
-    6.960 [0] |
-    8.371 [96] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-    9.782 [0] |
-    11.194 [0] |
-    12.605 [48] |■■■■■■■■■■■■■■■■■■■■
-    14.016 [0] |
-    15.427 [1] |
-    16.838 [0] |
-    18.249 [1] |
 
-    Latency distribution:
-    10% in 4.3543 secs
-    25% in 4.4647 secs
-    50% in 7.2960 secs
-    75% in 11.7991 secs
-    90% in 11.9979 secs
-    95% in 12.0300 secs
-    99% in 18.2495 secs
+  Latency distribution:
+    10% in 0.1321 secs
+    25% in 0.1594 secs
+    50% in 0.2466 secs
+    75% in 0.7190 secs
+    90% in 1.8299 secs
+    95% in 2.7432 secs
+    99% in 3.2167 secs
 
-    Details (average, fastest, slowest):
-    DNS+dialup: 0.0621 secs, 4.1377 secs, 18.2495 secs
-    DNS-lookup: 0.0098 secs, 0.0000 secs, 0.0399 secs
-    req write: 0.0000 secs, 0.0000 secs, 0.0001 secs
-    resp wait: 7.6718 secs, 4.1376 secs, 18.0013 secs
-    resp read: 0.0001 secs, 0.0000 secs, 0.0007 secs
+  Details (average, fastest, slowest):
+    DNS+dialup:   0.0595 secs, 0.1018 secs, 5.9453 secs
+    DNS-lookup:   0.0211 secs, 0.0000 secs, 0.0851 secs
+    req write:    0.0000 secs, 0.0000 secs, 0.0004 secs
+    resp wait:    0.6040 secs, 0.1017 secs, 5.7147 secs
+    resp read:    0.0001 secs, 0.0000 secs, 0.0032 secs
 
-    Status code distribution:
-    [200] 199 responses
+  Status code distribution:
+    [200] 200 responses
   ```
