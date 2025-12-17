@@ -33,7 +33,7 @@ tasks:
   compose:down:
     dir: function
     cmds:
-      - docker compose down
+      - docker compose down {{.CLI_ARGS}}
     silent: false
 
   function:build:
