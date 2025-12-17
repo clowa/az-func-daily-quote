@@ -2,19 +2,15 @@ package quotable
 
 import "net/http"
 
-const (
-	quotableApiUrl = "https://api.quotable.io"
-)
-
 type QuotableClient struct {
 	baseUrl string
 }
 
 // NewQuotableClient creates a new instance of QuotableClient.
-// If host is an empty string or nil, it defaults to the official Quotable API URL.
-func NewQuotableClient() *QuotableClient {
+// The host parameter allows to specify the target API endpoint.
+func NewQuotableClient(host string) *QuotableClient {
 	return &QuotableClient{
-		baseUrl: quotableApiUrl,
+		baseUrl: host,
 	}
 }
 

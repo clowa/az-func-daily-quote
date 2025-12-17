@@ -19,6 +19,7 @@ import (
 )
 
 const (
+	quotableApiUrl        = "https://api.quotable.io"
 	defaultContextTimeout = 10 * time.Second
 )
 
@@ -172,7 +173,7 @@ func getRandomQuoteFromDatabase() (quote.Quote, error) {
 func getQuoteFromQuotable(writeToDatabase bool) (quote.Quote, error) {
 	var quoteOfTheDay quote.Quote
 
-	quotableClient := quotable.NewQuotableClient()
+	quotableClient := quotable.NewQuotableClient(quotableApiUrl)
 	quotes, err := quotableClient.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: "technology"})
 
 	if err != nil {
