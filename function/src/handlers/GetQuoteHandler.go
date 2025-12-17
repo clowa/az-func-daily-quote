@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/clowa/az-func-daily-quote/src/lib/config"
-	quotable "github.com/clowa/az-func-daily-quote/src/lib/quotableSdk"
+	quotable "github.com/clowa/az-func-daily-quote/src/lib/quotable"
 	quote "github.com/clowa/az-func-daily-quote/src/lib/quote"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
@@ -19,6 +19,7 @@ import (
 )
 
 const (
+	quotableApiUrl        = "https://api.quotable.io"
 	defaultContextTimeout = 10 * time.Second
 )
 
@@ -172,7 +173,9 @@ func getRandomQuoteFromDatabase() (quote.Quote, error) {
 func getQuoteFromQuotable(writeToDatabase bool) (quote.Quote, error) {
 	var quoteOfTheDay quote.Quote
 
-	quotes, err := quotable.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: []string{"technology"}})
+	quotableClient := quotable.NewQuotableClient(quotableApiUrl)
+	quotes, err := quotableClient.GetRandomQuote(quotable.GetRandomQuoteQueryParams{Limit: 1, Tags: "technology"})
+
 	if err != nil {
 		return quote.Quote{}, fmt.Errorf("error fetching quote from quotable API: %s", err)
 	} else if !(len(quotes) > 0) {

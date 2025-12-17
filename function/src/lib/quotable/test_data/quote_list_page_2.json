@@ -1,0 +1,45 @@
+{
+    "count": 3,
+    "totalCount": 6,
+    "page": 2,
+    "totalPages": 2,
+    "lastItemIndex": 6,
+    "results": [
+        {
+            "_id": "JxE5YMTDIK",
+            "content": "Technology is a word that describes something that doesn't work yet.",
+            "author": "Douglas Adams",
+            "tags": [
+                "Technology"
+            ],
+            "authorSlug": "douglas-adams",
+            "length": 68,
+            "dateAdded": "2021-03-28",
+            "dateModified": "2023-04-14"
+        },
+        {
+            "_id": "-aFzTtY-Ls",
+            "content": "Science and technology revolutionize our lives, but memory, tradition and myth frame our response.",
+            "author": "Arthur M. Schlesinger Jr.",
+            "tags": [
+                "Technology"
+            ],
+            "authorSlug": "arthur-m-schlesinger-jr",
+            "length": 98,
+            "dateAdded": "2021-03-28",
+            "dateModified": "2023-04-14"
+        },
+        {
+            "_id": "es6wl_dKJo",
+            "content": "The human spirit must prevail over technology.",
+            "author": "Albert Einstein",
+            "tags": [
+                "Technology"
+            ],
+            "authorSlug": "albert-einstein",
+            "length": 46,
+            "dateAdded": "2021-03-26",
+            "dateModified": "2023-04-14"
+        }
+    ]
+}
