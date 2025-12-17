@@ -9,7 +9,7 @@
     "azidentity",
     "bson",
     "Infof",
-    "quoteable",
+    "quotable",
     "Warnf"
   ]
 }

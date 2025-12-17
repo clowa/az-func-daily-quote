@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/clowa/az-func-daily-quote/src/lib/config"
-	quotable "github.com/clowa/az-func-daily-quote/src/lib/quotableClient"
+	quotable "github.com/clowa/az-func-daily-quote/src/lib/quotable"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

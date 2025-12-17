@@ -1,4 +1,4 @@
-package quotableClient
+package quotable
 
 import "net/http"
 
@@ -10,6 +10,8 @@ type QuotableClient struct {
 	baseUrl string
 }
 
+// NewQuotableClient creates a new instance of QuotableClient.
+// If host is an empty string or nil, it defaults to the official Quotable API URL.
 func NewQuotableClient() *QuotableClient {
 	return &QuotableClient{
 		baseUrl: quotableApiUrl,

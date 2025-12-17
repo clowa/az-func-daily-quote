@@ -1,4 +1,4 @@
-package quotableClient
+package quotable
 
 import (
 	"encoding/json"
