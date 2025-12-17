@@ -20,12 +20,14 @@ type GetRandomQuoteQueryParams struct {
 }
 
 type QuoteResponse struct {
-	Id         string   `json:"_id"`
-	Content    string   `json:"content"`
-	Author     string   `json:"author"`
-	Tags       []string `json:"tags"`
-	AuthorSlug string   `json:"authorSlug"`
-	Length     int      `json:"length"`
+	Id           string   `json:"_id"`
+	Content      string   `json:"content"`
+	Author       string   `json:"author"`
+	Tags         []string `json:"tags"`
+	AuthorSlug   string   `json:"authorSlug"`
+	Length       int      `json:"length"`
+	DateModified string   `json:"dateModified"`
+	DateAdded    string   `json:"dateAdded"`
 }
 
 func (c *QuotableClient) GetRandomQuote(params GetRandomQuoteQueryParams) ([]QuoteResponse, error) {
