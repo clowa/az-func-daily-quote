@@ -32,14 +32,14 @@ type ListQuotesResponse struct {
 }
 
 func (c *QuotableClient) ListQuotes(params ListQuotesRequestParams) (ListQuotesResponse, error) {
-	const listQuotesPath = "/quotes"
+	const apiPath = "/quotes"
 
 	urlValues, err := query.Values(params)
 	if err != nil {
 		return ListQuotesResponse{}, err
 	}
 
-	apiEndpoint := c.baseUrl + listQuotesPath + "?" + urlValues.Encode()
+	apiEndpoint := c.baseUrl + apiPath + "?" + urlValues.Encode()
 	log.Infof("Listing quotes from %s", apiEndpoint)
 	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
 	if err != nil {

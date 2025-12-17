@@ -23,20 +23,20 @@ type QuoteResponse struct {
 	Id         string   `json:"_id"`
 	Content    string   `json:"content"`
 	Author     string   `json:"author"`
+	Tags       []string `json:"tags"`
 	AuthorSlug string   `json:"authorSlug"`
 	Length     int      `json:"length"`
-	Tags       []string `json:"tags"`
 }
 
 func (c *QuotableClient) GetRandomQuote(params GetRandomQuoteQueryParams) ([]QuoteResponse, error) {
-	const getRandomQuotePath = "/quotes/random"
+	const apiPath = "/quotes/random"
 
 	urlValues, err := query.Values(params)
 	if err != nil {
 		return []QuoteResponse{}, err
 	}
 
-	apiEndpoint := c.baseUrl + getRandomQuotePath + "?" + urlValues.Encode()
+	apiEndpoint := c.baseUrl + apiPath + "?" + urlValues.Encode()
 	log.Infof("Fetching quote from %s", apiEndpoint)
 	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
 	if err != nil {
