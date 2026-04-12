@@ -3,7 +3,7 @@ module github.com/clowa/az-func-daily-quote
 go 1.25
 
 require (
-	github.com/google/go-querystring v1.1.0
+	github.com/google/go-querystring v1.2.0
 	github.com/gruntwork-io/terratest v0.54.0
 	github.com/sirupsen/logrus v1.9.3
 	go.mongodb.org/mongo-driver v1.17.9
